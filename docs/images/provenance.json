@@ -1,0 +1,32 @@
+[
+  {
+    "file": "sun-court.jpg",
+    "source": "worldshell-gallery/screenshots/release-world/live-sun-court.png",
+    "source_sha256": "86933da270335aca893dbc4502a91c44037feda45906b66a9bfd1cf0d00e089f",
+    "sha256": "42e375fbb45bc868086dfcc732c019dffe1e797d88c61fc345d641da95b1073b",
+    "transform": "Resized to 1280x720, JPEG quality 84, metadata stripped; no retouching",
+    "author": "Hyprune contributors",
+    "license": "CC-BY-4.0",
+    "world": "Lumen Reach"
+  },
+  {
+    "file": "array-hall.jpg",
+    "source": "worldshell-gallery/screenshots/release-world/live-array-hall.png",
+    "source_sha256": "3f208cca781d3d20dba314b605b308026d3037fb01d9a105f0b8001508a6d283",
+    "sha256": "08a43703776da83fe00ebfa9c28350ef1d00a9d0e84f1b2792a06e5d7ac372c8",
+    "transform": "Resized to 1280x720, JPEG quality 84, metadata stripped; no retouching",
+    "author": "Hyprune contributors",
+    "license": "CC-BY-4.0",
+    "world": "Lumen Reach"
+  },
+  {
+    "file": "signal-rise.jpg",
+    "source": "worldshell-gallery/screenshots/release-world/live-signal-rise.png",
+    "source_sha256": "7da68f9d5c0c632ee95121c2ec20b908c03308fd9a3d00c0690121da9736059f",
+    "sha256": "8ee1b6ea5b50e8915cf35e5739a46ba95ed721efef2e039f2b87be68b1c38542",
+    "transform": "Resized to 1280x720, JPEG quality 84, metadata stripped; no retouching",
+    "author": "Hyprune contributors",
+    "license": "CC-BY-4.0",
+    "world": "Lumen Reach"
+  }
+]

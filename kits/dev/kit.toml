@@ -1,0 +1,33 @@
+version = 1
+name = "Developer"
+description = "Switchyard station docks plus a typed debug home and SDK tooling."
+worlds = ["switchyard", "minimal"]
+keymap = "core-default-v2"
+shell_theme = "hyprune-dark"
+initial_workspace = 10
+[settings.graphics]
+quality = "auto"
+fov = 60
+[[homes]]
+workspace = 10
+label = "Switchyard"
+world = "com.hyprune.switchyard"
+spawn = "arrival"
+# Switchyard 0.2 has legacy docks, not typed areas. Do not invent an area binding.
+[[homes]]
+workspace = 11
+label = "Debug home"
+world = "com.hyprune.minimal"
+area = "quiet-desk"
+spawn = "arrival"
+[[apps]]
+workspace = 11
+class = "HypruneDebug"
+title = "Hyprune debug"
+argv = ["kitty", "--class", "HypruneDebug", "--title", "Hyprune debug", "sh", "-c", "hyprune doctor; exec sh"]
+mount = "quiet-desk-operator-desk"
+[[apps]]
+workspace = 10
+class = "HypruneMetrics"
+title = "Switchyard metrics"
+argv = ["kitty", "--class", "HypruneMetrics", "--title", "Switchyard metrics", "btop"]

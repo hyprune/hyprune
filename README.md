@@ -1,0 +1,148 @@
+# Hyprune
+
+**Your desktop is a place.** Walk between workspace homes, keep a terminal on a
+desk, pull a window into reach, and warp to the next part of your day.
+
+This is Hyprune's front door: compatible core, Quickshell shell, SDK, original
+worlds and starter kits. Start in our vision, then change every part of it.
+[hyprune.com](https://hyprune.com) · [Roadmap](https://hyprune.com/roadmap/) ·
+[Keymap](https://hyprune.com/keymap/)
+
+![A live terminal on a Sun Court desk in Lumen Reach](docs/images/sun-court.jpg)
+
+Early preview, targeting **Hyprland 0.56.2** and shell IPC **0.6**. Component
+repositories are currently private. Minimal is self-contained; **Lumen Reach and
+Switchyard downloads await owner-published releases**. The URLs and hashes in
+[worlds/releases.json](worlds/releases.json) are explicitly TODO, not working
+download links. Dedicated DRM/hardware-cursor acceptance still needs the core
+owner's supervised checklist; container tests cannot verify it.
+
+| Kit | First experience | Graphics | Distribution |
+| --- | --- | --- | --- |
+| `lumen-reach` | Sun Court, Array Hall, Rime Vault, Signal Rise; desk terminals and btop kiosk | High; switch to `intel` for a lighter tier | Release tarball TODO |
+| `minimal` | One quiet home, terminal, workspace wall and spare lectern; 12 triangles, no textures | Intel tier, bloom off, reduced motion | Included, original CC0 |
+| `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard release TODO |
+
+All kits use core's M3B keymap and the shell's built-in dark theme. Switchyard
+has legacy station docks, so dev maps it as a destination without inventing typed
+home/mount contracts. GPU suitability depends on hardware and output resolution;
+Minimal has no measured iGPU frame-rate guarantee yet.
+
+## Install
+
+Access to the private component repositories is required until they become public.
+Use a read-only GitHub token through Nix's `access-tokens` configuration, or the
+[local Docker overrides](docs/contributing.md). No token belongs in the lockfile.
+
+**Nix profile / other Linux distributions:**
+
+```sh
+nix profile install github:hyprune/hyprune#kit-minimal
+hyprune-setup install
+# Log out. From a TTY:
+hyprune-session
+```
+
+`default` is the Minimal bundle; `kit-lumen-reach` and `kit-dev` also fetch the
+corresponding release worlds. After publication, configure those kits with
+`hyprune-setup install --kit /path/to/kits/<kit>/kit.toml --world-dir /path/to/world-package/share/hyprune/worlds`.
+For a new kit, first move the existing starter config and layout aside as described
+in [kit authoring](docs/kits.md). Nix modules supply these paths automatically.
+
+**NixOS:** add `inputs.hyprune.url = "github:hyprune/hyprune"` to your flake, then:
+
+```nix
+imports = [ inputs.hyprune.nixosModules.default ];
+programs.hyprune = {
+  enable = true;
+  kit = "minimal"; # "lumen-reach" after release publication
+  worlds = [];    # additional "lumen-reach", "switchyard", "minimal"
+  settings.graphics = { quality = "intel"; reduced_motion = true; };
+};
+```
+
+Rebuild and choose **Hyprune (minimal)** at login, or run `Hyprland` from a TTY.
+The module selects the same pinned compositor used to compile the plugin, plus
+its matching portal. Use Hyprune as the session entry point; UWSM credential
+handoff is not implemented.
+
+**Home Manager:** use `inputs.hyprune.homeManagerModules.default` with the same
+`programs.hyprune` options. It sets `configType = "lua"`, the plugin path in
+`wayland.windowManager.hyprland.plugins`, and a user-owned Lua include. Launch
+Home Manager's `Hyprland` wrapper from a TTY. On NixOS, enable the system's
+`programs.hyprland` with `inputs.hyprune.packages.${pkgs.stdenv.hostPlatform.system}.hyprland`
+and its matching portal for system integration; let Home Manager own this user's
+kit. Use one Hyprune module per user/session, rather than applying both starters.
+
+**Arch script:** with Hyprland 0.56.2 installed:
+
+```sh
+git clone https://github.com/hyprune/hyprune
+cd hyprune
+./install.sh --kit minimal --dry-run
+./install.sh --kit minimal
+# Add ~/.local/bin to PATH. Log out, then start from a TTY:
+hyprune-session
+```
+
+The script checks both the compositor binary and plugin-header version, builds
+the pinned core and SDK, installs the Python bridge in a private venv, and uses
+Arch's Quickshell. It uses CMake because core has no hyprpm manifest; see the
+[proposal and helper-path prerequisite](proposals/README.md). It doesn't change
+the compositor version for you. A newer Arch Hyprland must be deliberately
+replaced with a matching build, or use Nix's pinned compositor.
+
+Your normal Hyprland config is separate. To use it, pass
+`--hyprland-config ~/.config/hypr/hyprland.lua`: the script displays the exact
+diff, asks, and writes a timestamped backup before adding an include. There is
+no unattended approval flag and no live reload/plugin-load command. Then launch
+`hyprune-session --config ~/.config/hypr/hyprland.lua` from a TTY.
+
+`./install.sh --uninstall --dry-run` previews removal; `--uninstall` removes
+unchanged wrappers and moves the installed build to a rollback backup. Removing
+the include also requires its own diff/confirmation. Config, state, worlds,
+backups and distro dependencies remain yours. Rerunning install preserves edits
+and existing worlds. **Fedora/Debian package installation is not implemented or
+validated**; the script reports that honestly and stops. Nix is the available
+packaging path there.
+
+## Zero to the trailer
+
+Choose `lumen-reach` after its release is published. Before then, an owner with
+the existing release archive can use the [local archive path](docs/zero-to-the-trailer.md).
+
+1. Install the kit and start its Hyprune session. Press **Super+F12** to enter
+   the world. **F12** always returns to the desktop.
+2. Walk toward Sun Court's workspace wall with **WASD**, **HJKL**, or arrows;
+   move the mouse to look. Space jumps, Shift runs.
+3. Hold **TAB for one second**, then release: Director Map stays open. Escape
+   closes it. Settings edits the independently watched keymap.
+4. Press **Super+Enter** for an extra terminal on workspace 1. Aim at it on
+   the wall, hold **Super+left mouse** to pull/carry it, and move it onto the
+   spare desk. Slot **2**, tag the window, then click the desk to mount it.
+   **E** uses it in place; **Super+TAB** returns to walking.
+5. Hold TAB, open **Workspaces**, and select **Array Hall**. Core takes you
+   to that home. **Super+2** also selects it. Warp out to another installed
+   world through its mapped workspace; add `dev`'s Switchyard destination to a
+   forked kit for a cross-world trip. **F** brings an aimed app or workspace
+   into native 2D; Super+TAB brings you back.
+
+The full illustrated walk-through is
+[docs/zero-to-the-trailer.md](docs/zero-to-the-trailer.md), ready to wire into
+the documentation site. Still-image labels reflect the capture's earlier input
+revision; the instructions here use the current M3B keymap.
+
+## Make it yours
+
+Kits are TOML data, compiled into the existing Lua, input JSON, workspace-location
+JSON and persistent layout contracts. Files under `~/.config/hyprune` and
+`~/.local/state/hyprune` are written only when absent. Changing the module's kit
+or settings supplies new defaults for a fresh profile; it does not overwrite an
+existing profile. [Fork a kit or start from scratch](docs/kits.md).
+
+Code and docs: MIT. Quiet Desk: CC0-1.0. Lumen Reach gallery stills: Hyprune
+contributors, CC-BY-4.0, resized without retouching;
+[image provenance](docs/images/provenance.json). No prototype/game assets are used.
+
+[Contributor builds and Docker testing](docs/contributing.md) ·
+[Verification report](docs/verification.md) · [Owner release checklist](docs/releases.md)

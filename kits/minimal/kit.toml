@@ -1,0 +1,24 @@
+version = 1
+name = "Minimal"
+description = "One original quiet home, small geometry, no textures, Intel graphics tier."
+worlds = ["minimal"]
+keymap = "core-default-v2"
+shell_theme = "hyprune-dark"
+initial_workspace = 1
+[settings.graphics]
+quality = "intel"
+bloom_strength = 0
+fov = 60
+reduced_motion = true
+[[homes]]
+workspace = 1
+label = "Quiet Desk"
+world = "com.hyprune.minimal"
+area = "quiet-desk"
+spawn = "arrival"
+[[apps]]
+workspace = 1
+class = "HypruneTerminal"
+title = "Hyprune desk"
+argv = ["kitty", "--class", "HypruneTerminal", "--title", "Hyprune desk"]
+mount = "quiet-desk-operator-desk"

@@ -1,0 +1,136 @@
+{
+  "formatVersion": "0.3",
+  "id": "com.hyprune.minimal",
+  "version": "0.1.0",
+  "name": "Quiet Desk",
+  "license": "CC0-1.0",
+  "scene": "scene.gltf",
+  "defaultSpawn": "arrival",
+  "spawns": [
+    {
+      "id": "arrival",
+      "pose": {
+        "position": [
+          0,
+          0,
+          4
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ],
+  "collision": [
+    {
+      "node": 0,
+      "shape": "mesh",
+      "layer": "static"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "quiet-desk-wall",
+      "pose": {
+        "position": [
+          0,
+          2.7,
+          -7.9
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "size": [
+        7,
+        3.94
+      ],
+      "screenType": "com.hyprune.window",
+      "mount": {
+        "type": "facade-wall",
+        "role": "mounted-workspace",
+        "interaction": "focus-in"
+      }
+    },
+    {
+      "id": "quiet-desk-operator-desk",
+      "pose": {
+        "position": [
+          -2.2,
+          1.85,
+          -2
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "size": [
+        3.2,
+        1.8
+      ],
+      "screenType": "com.hyprune.window",
+      "mount": {
+        "type": "operator-desk",
+        "role": "tool-mount",
+        "interaction": "in-place"
+      }
+    },
+    {
+      "id": "quiet-desk-lectern",
+      "pose": {
+        "position": [
+          2.8,
+          1.7,
+          -2
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "size": [
+        2.4,
+        1.35
+      ],
+      "screenType": "com.hyprune.window",
+      "mount": {
+        "type": "lectern",
+        "role": "tool-mount",
+        "interaction": "in-place"
+      }
+    }
+  ],
+  "areas": [
+    {
+      "id": "quiet-desk",
+      "workspaceSlot": "01",
+      "primaryAnchor": "quiet-desk-wall",
+      "toolAnchors": [
+        "quiet-desk-operator-desk",
+        "quiet-desk-lectern"
+      ],
+      "dataAnchors": [],
+      "theme": "Quiet Desk",
+      "spawnId": "arrival"
+    }
+  ],
+  "attribution": [
+    {
+      "path": ".",
+      "author": "Hyprune contributors",
+      "license": "CC0-1.0",
+      "source": "https://github.com/hyprune/hyprune"
+    }
+  ]
+}

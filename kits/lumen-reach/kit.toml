@@ -1,0 +1,68 @@
+version = 1
+name = "Lumen Reach"
+description = "Four workspace homes, live tools, and the connected release-world tour."
+worlds = ["lumen-reach"]
+keymap = "core-default-v2"
+shell_theme = "hyprune-dark"
+initial_workspace = 1
+
+[settings.graphics]
+quality = "high"
+fov = 60
+reduced_motion = false
+
+[[homes]]
+workspace = 1
+label = "Sun Court"
+world = "com.hyprune.lumen-reach"
+area = "sun-court"
+spawn = "sun-court"
+[[homes]]
+workspace = 2
+label = "Array Hall"
+world = "com.hyprune.lumen-reach"
+area = "array-hall"
+spawn = "array-hall"
+[[homes]]
+workspace = 3
+label = "Rime Vault"
+world = "com.hyprune.lumen-reach"
+area = "rime-vault"
+spawn = "rime-vault"
+[[homes]]
+workspace = 4
+label = "Signal Rise"
+world = "com.hyprune.lumen-reach"
+area = "signal-rise"
+spawn = "signal-rise"
+
+[[apps]]
+workspace = 1
+class = "HypruneTerminal"
+title = "Hyprune desk"
+argv = ["kitty", "--class", "HypruneTerminal", "--title", "Hyprune desk"]
+mount = "sun-court-slot-01-operator-desk-01"
+[[apps]]
+workspace = 1
+class = "HypruneMetrics"
+title = "Hyprune kiosk"
+argv = ["kitty", "--class", "HypruneMetrics", "--title", "Hyprune kiosk", "btop"]
+mount = "sun-court-slot-01-kiosk-pillar-01"
+[[apps]]
+workspace = 2
+class = "HypruneArray"
+title = "Array Hall terminal"
+argv = ["kitty", "--class", "HypruneArray", "--title", "Array Hall terminal"]
+mount = "array-hall-slot-02-operator-desk-01"
+[[apps]]
+workspace = 3
+class = "HypruneVault"
+title = "Rime Vault terminal"
+argv = ["kitty", "--class", "HypruneVault", "--title", "Rime Vault terminal"]
+mount = "rime-vault-slot-03-operator-desk-01"
+[[apps]]
+workspace = 4
+class = "HypruneSignal"
+title = "Signal Rise terminal"
+argv = ["kitty", "--class", "HypruneSignal", "--title", "Signal Rise terminal"]
+mount = "signal-rise-slot-04-terminal-bench-01"

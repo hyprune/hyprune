@@ -1,0 +1,11 @@
+# PROPOSAL ONLY: copy into core after adding a relocatable daemon install target.
+# Core currently has no hyprpm.toml, so install.sh uses CMake directly.
+[repository]
+name = "hyprune-core"
+authors = ["Hyprune contributors"]
+
+[hyprune-core]
+description = "Hyprune world runtime (Hyprland 0.56.2 only)"
+authors = ["Hyprune contributors"]
+output = "build/hyprune-core.so"
+build = ["cmake -S . -B build -G Ninja -DBUILD_TESTING=OFF", "cmake --build build -j 3"]

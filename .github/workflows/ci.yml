@@ -1,0 +1,49 @@
+name: Starter checks and Nix builds
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_worlds:
+        description: Build release worlds (only after releases.json is published)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  nix:
+    runs-on: ubuntu-latest
+    env:
+      # Read-only fine-grained PAT with access to all private component repos.
+      # Public repos work without this secret. Never put a token in flake.lock.
+      NIX_CONFIG: "access-tokens = github.com=${{ secrets.HYPRUNE_READ_TOKEN || github.token }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            extra-substituters = https://hyprland.cachix.org
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+      - run: nix flake check --print-build-logs
+      - run: nix build .#core .#shell .#sdk .#starter .#world-minimal .#default --print-build-logs
+      - if: ${{ inputs.release_worlds }}
+        run: |
+          python3 -c 'import json; r=json.load(open("worlds/releases.json")); assert all(w["published"] for w in r.values()), "Publish release URLs and hashes first"'
+          nix build .#world-lumen-reach .#world-switchyard .#kit-lumen-reach .#kit-dev --print-build-logs
+  arch-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          docker run --rm -v "$PWD:/src:ro" -w /src archlinux:latest bash -lc '
+            set -e
+            pacman -Sy --noconfirm python zstd git
+            export HOME=/tmp/hyprune-test XDG_CONFIG_HOME=/tmp/hyprune-test/config XDG_DATA_HOME=/tmp/hyprune-test/data PYTHONDONTWRITEBYTECODE=1
+            mkdir -p "$HOME"
+            /src/install.sh --dry-run --kit lumen-reach
+            /src/install.sh --dry-run --kit minimal
+            /src/install.sh --dry-run --uninstall
+            python -m unittest discover -s tests -v
+            test -z "$(ls -A "$HOME")"
+          '

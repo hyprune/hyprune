@@ -1,0 +1,294 @@
+import argparse
+import contextlib
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import sys
+import tarfile
+import tempfile
+import unittest
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'runtime'))
+import setup
+import install
+import session
+
+
+class KitTests(unittest.TestCase):
+    def test_real_world_mounts_and_home_contracts(self):
+        for name in ['minimal', 'lumen-reach', 'dev']:
+            kit = setup.load_kit(ROOT / f'kits/{name}/kit.toml')
+            files = setup.compile_kit(kit, '/plugin.so', ['/worlds'], {})
+            self.assertEqual(len(files['locations.json']), len(kit['homes']))
+            self.assertEqual(files['layout.json']['version'], 1)
+            for placement in files['layout.json']['placements']:
+                self.assertIn(placement['areaId'], [b['areaId'] for b in files['layout.json']['bindings']])
+            self.assertIn('hl.plugin.load(os.getenv("HYPRUNE_PLUGIN") or "/plugin.so")', files['hyprune.lua'])
+            self.assertIn('hl.plugin.hyprune.config', files['hyprune.lua'])
+        minimal = json.loads((ROOT / 'worlds/minimal/world.json').read_text())
+        kit = setup.load_kit(ROOT / 'kits/minimal/kit.toml')
+        self.assertEqual(kit['homes'][0]['area'], minimal['areas'][0]['id'])
+        self.assertIn(kit['apps'][0]['mount'], [a['id'] for a in minimal['anchors']])
+
+    def test_home_manager_uses_native_plugin_option(self):
+        files = setup.compile_kit(setup.load_kit(ROOT / 'kits/minimal/kit.toml'), '/p.so', [], {}, True)
+        self.assertNotIn('hl.plugin.load', files['hyprune.lua'])
+        self.assertIn('quality', files['hyprune.lua'])
+
+    def test_user_owned_generation_preserves_config_and_layout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            seed = base / 'seed'; seed.mkdir()
+            (seed / 'hyprune.lua').write_text('first')
+            (seed / 'layout.json').write_text('{"version":1}')
+            with patch.dict(os.environ, XDG_CONFIG_HOME=str(base / 'config'), XDG_STATE_HOME=str(base / 'state')):
+                config = setup.init(seed)
+                (config / 'hyprune.lua').write_text('user edit')
+                layout = base / 'state/hyprune/layout.json'; layout.write_text('user layout')
+                (seed / 'hyprune.lua').write_text('new defaults')
+                setup.init(seed)
+                self.assertEqual((config / 'hyprune.lua').read_text(), 'user edit')
+                self.assertEqual(layout.read_text(), 'user layout')
+                self.assertEqual(layout.stat().st_mode & 0o777, 0o600)
+
+    def test_lua_escaping_is_data(self):
+        self.assertEqual(setup.lua('a"\\\n'), '"a\\"\\\\\\n"')
+        self.assertEqual(setup.lua(True), 'true')
+        self.assertIn('é', setup.lua('é'))
+
+
+class InstallTests(unittest.TestCase):
+    def test_local_source_fingerprint_ignores_builds_and_tracks_working_edits(self):
+        if not __import__('shutil').which('git'):
+            self.skipTest('git unavailable')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for repo in ['core', 'shell', 'sdk']:
+                path = root / repo; path.mkdir()
+                subprocess.run(['git', 'init', '-q', str(path)], check=True)
+                (path / '.gitignore').write_text('build/\n')
+                (path / 'source.txt').write_text('working source')
+                subprocess.run(['git', '-C', str(path), 'add', '.'], check=True)
+            before = install.local_fingerprint(root)
+            generated = root / 'core/build'; generated.mkdir(); (generated / 'temporary-token').write_text('not source')
+            self.assertEqual(before, install.local_fingerprint(root))
+            (root / 'core/source.txt').write_text('uncommitted source edit')
+            self.assertNotEqual(before, install.local_fingerprint(root))
+            copy = root / 'copy'
+            install.source('core', None, root, copy)
+            self.assertEqual((copy / 'source.txt').read_text(), 'uncommitted source edit')
+            self.assertFalse((copy / 'build').exists())
+
+    def test_managed_wrapper_updates_have_backup_and_edits_are_preserved(self):
+        with tempfile.TemporaryDirectory() as temp, contextlib.redirect_stdout(io.StringIO()):
+            path = Path(temp) / 'wrapper'; receipt = {}
+            install.write_managed(path, b'first', receipt)
+            install.write_managed(path, b'first', receipt)
+            install.write_managed(path, b'new', receipt)
+            backup, = Path(temp).glob('*.hyprune-backup-*')
+            self.assertEqual(backup.read_bytes(), b'first')
+            path.write_bytes(b'user edit')
+            with self.assertRaises(RuntimeError):
+                install.write_managed(path, b'upgrade', receipt)
+            self.assertEqual(path.read_bytes(), b'user edit')
+
+    def test_declining_uninstall_diff_preserves_installation(self):
+        with tempfile.TemporaryDirectory() as temp, contextlib.redirect_stdout(io.StringIO()):
+            base = Path(temp); prefix = base / 'install'; prefix.mkdir()
+            config = base / 'hyprland.lua'; config.write_text(install.INCLUDE)
+            (prefix / 'receipt.json').write_text(json.dumps(dict(hyprland_config=str(config))))
+            with patch.object(install, 'approved_edit', return_value=False), self.assertRaises(RuntimeError):
+                install.uninstall(argparse.Namespace(dry_run=False), prefix, base / 'config')
+            self.assertTrue((prefix / 'receipt.json').is_file())
+            self.assertEqual(config.read_text(), install.INCLUDE)
+
+    def test_diff_required_and_declined_edit_is_unchanged(self):
+        with tempfile.TemporaryDirectory() as temp, contextlib.redirect_stdout(io.StringIO()) as output:
+            config = Path(temp) / 'hyprland.lua'; config.write_text('-- existing\n')
+            self.assertFalse(install.approved_edit(config, '-- changed\n', lambda _: 'n'))
+            self.assertEqual(config.read_text(), '-- existing\n')
+            self.assertIn('\n--- existing\n', output.getvalue())
+            self.assertEqual(list(Path(temp).glob('*.hyprune-backup-*')), [])
+            self.assertTrue(install.approved_edit(config, '-- changed\n', lambda _: 'yes'))
+            backup, = Path(temp).glob('*.hyprune-backup-*')
+            self.assertEqual(backup.read_text(), '-- existing\n')
+            self.assertEqual(config.read_text(), '-- changed\n')
+
+    def test_managed_config_symlink_is_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / 'target'; target.write_text('managed')
+            link = Path(temp) / 'hyprland.lua'; link.symlink_to(target)
+            with self.assertRaises(RuntimeError):
+                install.approved_edit(link, 'replacement', lambda _: 'y')
+            self.assertEqual(target.read_text(), 'managed')
+
+    def test_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as temp:
+            env = {**os.environ, 'HOME': temp, 'XDG_CONFIG_HOME': temp + '/config', 'XDG_DATA_HOME': temp + '/data'}
+            result = subprocess.run([str(ROOT / 'install.sh'), '--dry-run', '--kit', 'minimal'], env=env,
+                                    capture_output=True, text=True)
+            # Test host may have an incompatible compositor; that must fail safely.
+            self.assertIn(result.returncode, [0, 1])
+            self.assertEqual(list(Path(temp).iterdir()), [])
+            if result.returncode == 0:
+                self.assertIn('no writes', result.stdout)
+            else:
+                self.assertIn('ABI mismatch', result.stderr)
+
+    def test_archive_rejects_traversal_and_symlinks(self):
+        if not __import__('shutil').which('zstd'):
+            self.skipTest('zstd unavailable')
+        for bad_name, kind in [('com.hyprune.test/../../escape', tarfile.REGTYPE),
+                               ('com.hyprune.test/link', tarfile.SYMTYPE)]:
+            with tempfile.TemporaryDirectory() as temp:
+                base = Path(temp); archive = base / 'unsafe.tar'
+                with tarfile.open(archive, 'w') as tf:
+                    member = tarfile.TarInfo(bad_name); member.type = kind; member.linkname = '/tmp/escape'
+                    tf.addfile(member)
+                subprocess.run(['zstd', '-q', str(archive)], check=True)
+                stage = base / 'unpacked'; stage.mkdir()
+                with self.assertRaises(ValueError):
+                    install.extract_world(base / 'unsafe.tar.zst', stage, 'com.hyprune.test')
+                self.assertFalse((base / 'escape').exists())
+
+    def test_valid_archive_identity(self):
+        if not __import__('shutil').which('zstd'):
+            self.skipTest('zstd unavailable')
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp); archive = base / 'world.tar'
+            with tarfile.open(archive, 'w') as tf:
+                data = b'{"id":"com.hyprune.test"}'
+                member = tarfile.TarInfo('com.hyprune.test/world.json'); member.size = len(data)
+                tf.addfile(member, io.BytesIO(data))
+            subprocess.run(['zstd', '-q', str(archive)], check=True)
+            stage = base / 'unpacked'; stage.mkdir()
+            install.extract_world(base / 'world.tar.zst', stage, 'com.hyprune.test')
+            self.assertTrue((stage / 'com.hyprune.test/world.json').is_file())
+
+    def test_archive_rejects_oversized_single_file_before_extracting(self):
+        if not __import__('shutil').which('zstd'):
+            self.skipTest('zstd unavailable')
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp); archive = base / 'oversized.tar'
+            member = tarfile.TarInfo('com.hyprune.test/huge.bin'); member.size = 128 * 1024**2 + 1
+            archive.write_bytes(member.tobuf() + b'\0' * 1024)  # Reject before reading its absent body.
+            subprocess.run(['zstd', '-q', str(archive)], check=True)
+            stage = base / 'unpacked'; stage.mkdir()
+            with self.assertRaisesRegex(ValueError, 'size/file limits'):
+                install.extract_world(base / 'oversized.tar.zst', stage, 'com.hyprune.test')
+            self.assertEqual(list(stage.iterdir()), [])
+
+
+class SessionTests(unittest.TestCase):
+    def test_worlds_are_real_files_and_existing_packages_survive(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp); source = base / 'source'; world = source / 'com.hyprune.test'
+            world.mkdir(parents=True)
+            (world / 'world.json').write_text('{"id":"com.hyprune.test"}')
+            (world / 'geometry.bin').write_bytes(b'original geometry')
+            installed = base / 'installed'
+            session.materialize_worlds([source], installed)
+            target = installed / world.name
+            self.assertFalse(target.is_symlink())
+            self.assertFalse((target / 'geometry.bin').is_symlink())
+            self.assertEqual((target / 'geometry.bin').read_bytes(), b'original geometry')
+            (world / 'geometry.bin').write_bytes(b'new source')
+            session.materialize_worlds([source], installed)
+            self.assertEqual((target / 'geometry.bin').read_bytes(), b'original geometry')
+
+    def test_supervisor_starts_only_its_child_and_hands_off_one_shot_grant(self):
+        # Process/socket fixture; no compositor binary, GPU or owner-session IPC.
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp); runtime = base / 'runtime'; runtime.mkdir(mode=0o700)
+            config = base / 'config/hyprune'; config.mkdir(parents=True)
+            (config / 'session.lua').write_text('-- fixture\n')
+            (config / 'locations.json').write_text(json.dumps([dict(id=1, worldId='com.hyprune.minimal', spawnId='arrival')]))
+            fake = base / 'fake-hyprland'
+            fake.write_text('''#!/usr/bin/env python3
+import json, os, pathlib, socket, struct, sys
+if '--version' in sys.argv:
+    print('Hyprland 0.56.2'); sys.exit(0)
+fd = int(os.environ['HYPRUNE_LAUNCH_FD'])
+grants = json.loads(os.read(fd, 8192)); os.close(fd)
+assert len(grants) == 2 and grants[0]['client'] == 'com.hyprune.shell'
+assert 'input.control' in grants[0]['capabilities']
+assert grants[1]['client'] == 'com.hyprune.starter' and grants[1]['capabilities'] == ['world.control']
+assert 'HYPRLAND_INSTANCE_SIGNATURE' not in os.environ
+root = pathlib.Path(os.environ['XDG_RUNTIME_DIR'])
+lock = root / 'hypr/fixture/hyprland.lock'; lock.parent.mkdir(parents=True)
+lock.write_text(str(os.getpid()) + '\\nwayland-fixture\\n')
+native = socket.socket(socket.AF_UNIX); native.bind(str(lock.parent / '.socket.sock')); native.listen()
+control = root / 'hyprune/fixture/control.sock'; control.parent.mkdir(parents=True)
+server = socket.socket(socket.AF_UNIX); server.bind(str(control)); server.listen(); server.settimeout(10)
+def exact(peer, count):
+    result = b''
+    while len(result) < count:
+        part = peer.recv(count - len(result)); assert part; result += part
+    return result
+for _ in range(2):
+    peer, _ = server.accept(); head = exact(peer, 4)
+    if head == b'SHEL':
+        assert exact(peer, 65).decode().strip() == grants[0]['token']
+    else:
+        hello = json.loads(exact(peer, struct.unpack('!I', head)[0]))
+        assert hello['params']['token'] == grants[1]['token']
+        def reply(id, result):
+            body = json.dumps(dict(jsonrpc='2.0', id=id, result=result)).encode()
+            peer.sendall(struct.pack('!I', len(body)) + body)
+        reply(hello['id'], dict(protocol='0.6', capabilities=['world.control']))
+        size = struct.unpack('!I', exact(peer, 4))[0]; request = json.loads(exact(peer, size))
+        assert request['method'] == 'world.load'
+        assert request['params'] == dict(worldId='com.hyprune.minimal', spawnId='arrival')
+        reply(request['id'], dict(revision=1))
+    peer.close()
+server.close(); native.close()
+(root / 'authorized').write_text('IPC 0.6 fixture authorized')
+''')
+            fake.chmod(0o755)
+            shell = base / 'fake-shell.py'
+            shell.write_text('''import os, socket
+assert os.environ['HYPRLAND_INSTANCE_SIGNATURE'] == 'fixture'
+assert os.environ['WAYLAND_DISPLAY'] == 'wayland-fixture'
+assert os.environ['HYPRUNE_PROTOCOL'] == '0.6'
+assert 'HYPRUNE_LAUNCH_FD' not in os.environ
+fd = int(os.environ['HYPRUNE_TOKEN_FD']); token = os.read(fd, 128); os.close(fd)
+peer = socket.socket(socket.AF_UNIX); peer.connect(os.environ['HYPRUNE_SOCKET']); peer.sendall(b'SHEL' + token); peer.close()
+''')
+            (config / 'session.json').write_text(json.dumps(dict(world_dirs=[], apps=[],
+                initial_workspace=1, shell=[sys.executable, str(shell)])))
+            env = {**os.environ, 'XDG_CONFIG_HOME': str(base / 'config'),
+                   'XDG_DATA_HOME': str(base / 'data'), 'XDG_STATE_HOME': str(base / 'state'),
+                   'XDG_RUNTIME_DIR': str(runtime), 'PYTHONDONTWRITEBYTECODE': '1'}
+            env.pop('HYPRLAND_INSTANCE_SIGNATURE', None)
+            result = subprocess.run([sys.executable, str(ROOT / 'runtime/session.py'), '--hyprland', str(fake)],
+                                    env=env, capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((runtime / 'authorized').read_text(), 'IPC 0.6 fixture authorized')
+
+    def test_token_fd_contains_only_payload_and_is_not_inheritable_by_default(self):
+        read = session.pipe_payload(b'secret\n')
+        try:
+            self.assertFalse(os.get_inheritable(read))
+            self.assertEqual(os.read(read, 128), b'secret\n')
+            self.assertEqual(os.read(read, 128), b'')
+        finally:
+            os.close(read)
+
+    def test_no_outer_session_fallback(self):
+        with tempfile.TemporaryDirectory() as temp:
+            runtime = Path(temp)
+            lock = runtime / 'hypr/outer/hyprland.lock'; lock.parent.mkdir(parents=True)
+            lock.write_text(f'{os.getpid()}\nwayland-outer\n')
+            child = type('Child', (), {'pid': 99999999, 'poll': lambda self: None})()
+            with self.assertRaises(RuntimeError):
+                session.child_environment(runtime, child, Path('/private.lua'), timeout=.01)
+
+
+if __name__ == '__main__':
+    unittest.main()
