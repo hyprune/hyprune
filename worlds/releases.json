@@ -2,17 +2,17 @@
   "lumen-reach": {
     "id": "com.hyprune.lumen-reach",
     "version": "0.4.0",
-    "url": "https://github.com/hyprune/worlds/releases/download/TODO-lumen-reach-v0.4.0/com.hyprune.lumen-reach-0.4.0.tar.zst",
-    "sha256": "TODO_OWNER_PUBLISH_SHA256",
-    "nixHash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-    "published": false
+    "url": "https://github.com/hyprune/worlds/releases/download/lumen-reach-v0.4.0/com.hyprune.lumen-reach-0.4.0.tar.zst",
+    "sha256": "4e6fcabf7c01db1f7a2947cd84092cbb2c0a12bd46be337640505ee73733e6ef",
+    "nixHash": "sha256-Tm/Kv3wB2x96KUfNhAksuywKEr1GvjN2QFBe5zcz5u8=",
+    "published": true
   },
   "switchyard": {
     "id": "com.hyprune.switchyard",
     "version": "0.1.1",
-    "url": "https://github.com/hyprune/worlds/releases/download/TODO-switchyard-v0.1.1/com.hyprune.switchyard-0.1.1.tar.zst",
-    "sha256": "TODO_OWNER_PUBLISH_SHA256",
-    "nixHash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-    "published": false
+    "url": "https://github.com/hyprune/worlds/releases/download/switchyard-v0.1.1/com.hyprune.switchyard-0.1.1.tar.zst",
+    "sha256": "00a8b8eed6642248fc5e51e1f8b6b8069739cbd77ccfb4659c8ae04380909cf3",
+    "nixHash": "sha256-AKi47tZkIkj8XlHh+La4Bpc5y9d8z7RlnIrgQ4CQnPM=",
+    "published": true
   }
 }
