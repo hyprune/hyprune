@@ -4,20 +4,19 @@ description = "One original quiet home, small geometry, no textures, Intel graph
 worlds = ["minimal"]
 keymap = "core-default-v2"
 shell_theme = "hyprune-dark"
-initial_workspace = 1
+# The world defines the home: room 20, Quiet Desk (workspaceSlot 01) on 21.
+initial_workspace = 21
+initial_world = "com.hyprune.minimal"
+initial_spawn = "arrival"
 [settings.graphics]
 quality = "intel"
 bloom_strength = 0
 fov = 60
 reduced_motion = true
-[[homes]]
-workspace = 1
-label = "Quiet Desk"
+[[apps]]
+workspace = 21
 world = "com.hyprune.minimal"
 area = "quiet-desk"
-spawn = "arrival"
-[[apps]]
-workspace = 1
 class = "HypruneTerminal"
 title = "Hyprune desk"
 argv = ["kitty", "--class", "HypruneTerminal", "--title", "Hyprune desk"]

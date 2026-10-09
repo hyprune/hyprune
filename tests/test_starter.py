@@ -25,16 +25,36 @@ class KitTests(unittest.TestCase):
         for name in ['minimal', 'lumen-reach', 'dev']:
             kit = setup.load_kit(ROOT / f'kits/{name}/kit.toml')
             files = setup.compile_kit(kit, '/plugin.so', ['/worlds'], {})
-            self.assertEqual(len(files['locations.json']), len(kit['homes']))
+            self.assertEqual(len(files['locations.json']), len(kit.get('homes', [])))
             self.assertEqual(files['layout.json']['version'], 1)
-            for placement in files['layout.json']['placements']:
-                self.assertIn(placement['areaId'], [b['areaId'] for b in files['layout.json']['bindings']])
+            for app in kit['apps']:
+                # The world defines area homes (room 20, workspace_base 20 + slot); explicit kit
+                # homes are only cross-world destinations outside the 20-29 group.
+                self.assertTrue(21 <= app['workspace'] <= 29 or app['workspace'] in
+                                [h['workspace'] for h in kit.get('homes', [])], app)
+            for home in kit.get('homes', []):
+                self.assertNotIn(home['workspace'], range(20, 30))
+                self.assertNotIn('area', home)
+            self.assertEqual(files['layout.json']['bindings'], [])
+            mounted = [a for a in kit['apps'] if 'mount' in a]
+            self.assertEqual([(p['worldId'], p['areaId'], p['anchorId']) for p in files['layout.json']['placements']],
+                             [(a['world'], a['area'], a['mount']) for a in mounted])
+            self.assertIn(f'workspace = "{kit["initial_workspace"]}", default = true', files['hyprune.lua'])
+            self.assertIn('hl.bind("SUPER + 2", hl.dsp.focus({ workspace = "22" }))', files['hyprune.lua'])
             self.assertIn('hl.plugin.load(os.getenv("HYPRUNE_PLUGIN") or "/plugin.so")', files['hyprune.lua'])
             self.assertIn('hl.plugin.hyprune.config', files['hyprune.lua'])
         minimal = json.loads((ROOT / 'worlds/minimal/world.json').read_text())
         kit = setup.load_kit(ROOT / 'kits/minimal/kit.toml')
-        self.assertEqual(kit['homes'][0]['area'], minimal['areas'][0]['id'])
-        self.assertIn(kit['apps'][0]['mount'], [a['id'] for a in minimal['anchors']])
+        area = minimal['areas'][0]
+        self.assertEqual((kit['apps'][0]['world'], kit['apps'][0]['area']), (minimal['id'], area['id']))
+        self.assertEqual(kit['apps'][0]['workspace'], 20 + int(area['workspaceSlot']))
+        self.assertEqual(kit['initial_workspace'], 20 + int(area['workspaceSlot']))
+        self.assertIn(kit['apps'][0]['mount'], area['toolAnchors'])
+        self.assertEqual(setup.compile_kit(kit, '/p.so', [], {})['session.json']['start'],
+                         dict(worldId=minimal['id'], spawnId='arrival'))
+        dev = setup.compile_kit(setup.load_kit(ROOT / 'kits/dev/kit.toml'), '/p.so', [], {})
+        self.assertEqual(dev['session.json']['start'], dict(worldId='com.hyprune.switchyard', spawnId='arrival'))
+        self.assertIn('hl.bind("SUPER + 0", hl.dsp.focus({ workspace = "30" }))', dev['hyprune.lua'])
 
     def kit(self, **fields):
         base = dict(version=1, name='Test', worlds=['minimal'], keymap='core-default-v2', shell_theme='hyprune-dark',

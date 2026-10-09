@@ -4,30 +4,29 @@ description = "Switchyard station docks plus a typed debug home and SDK tooling.
 worlds = ["switchyard", "minimal"]
 keymap = "core-default-v2"
 shell_theme = "hyprune-dark"
-initial_workspace = 10
+initial_workspace = 30
 [settings.graphics]
 quality = "auto"
 fov = 60
+# Switchyard 0.2 has legacy docks, not typed areas, so the world defines no
+# home for it. This explicit destination stays outside the room (20) and area
+# homes (21-29); 30 is Super+0 next to them. Do not invent an area binding.
 [[homes]]
-workspace = 10
+workspace = 30
 label = "Switchyard"
 world = "com.hyprune.switchyard"
 spawn = "arrival"
-# Switchyard 0.2 has legacy docks, not typed areas. Do not invent an area binding.
-[[homes]]
-workspace = 11
-label = "Debug home"
+# The debug home is Minimal's world-defined Quiet Desk home, 21 (slot 01).
+[[apps]]
+workspace = 21
 world = "com.hyprune.minimal"
 area = "quiet-desk"
-spawn = "arrival"
-[[apps]]
-workspace = 11
 class = "HypruneDebug"
 title = "Hyprune debug"
 argv = ["kitty", "--class", "HypruneDebug", "--title", "Hyprune debug", "sh", "-c", "hyprune doctor; exec sh"]
 mount = "quiet-desk-operator-desk"
 [[apps]]
-workspace = 10
+workspace = 30
 class = "HypruneMetrics"
 title = "Switchyard metrics"
 argv = ["kitty", "--class", "HypruneMetrics", "--title", "Switchyard metrics", "btop"]

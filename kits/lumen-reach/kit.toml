@@ -4,64 +4,53 @@ description = "Four workspace homes, live tools, and the connected release-world
 worlds = ["lumen-reach"]
 keymap = "core-default-v2"
 shell_theme = "hyprune-dark"
-initial_workspace = 1
+# The world defines the homes: room 20, then windows.workspace_base (20) + each
+# area's workspaceSlot: 21 Sun Court, 22 Array Hall, 23 Rime Vault, 24 Signal Rise.
+initial_workspace = 21
+initial_world = "com.hyprune.lumen-reach"
+initial_spawn = "sun-court"
 
 [settings.graphics]
 quality = "high"
 fov = 60
 reduced_motion = false
 
-[[homes]]
-workspace = 1
-label = "Sun Court"
+[[apps]]
+workspace = 21
 world = "com.hyprune.lumen-reach"
 area = "sun-court"
-spawn = "sun-court"
-[[homes]]
-workspace = 2
-label = "Array Hall"
-world = "com.hyprune.lumen-reach"
-area = "array-hall"
-spawn = "array-hall"
-[[homes]]
-workspace = 3
-label = "Rime Vault"
-world = "com.hyprune.lumen-reach"
-area = "rime-vault"
-spawn = "rime-vault"
-[[homes]]
-workspace = 4
-label = "Signal Rise"
-world = "com.hyprune.lumen-reach"
-area = "signal-rise"
-spawn = "signal-rise"
-
-[[apps]]
-workspace = 1
 class = "HypruneTerminal"
 title = "Hyprune desk"
 argv = ["kitty", "--class", "HypruneTerminal", "--title", "Hyprune desk"]
 mount = "sun-court-slot-01-operator-desk-01"
 [[apps]]
-workspace = 1
+workspace = 21
+world = "com.hyprune.lumen-reach"
+area = "sun-court"
 class = "HypruneMetrics"
 title = "Hyprune kiosk"
 argv = ["kitty", "--class", "HypruneMetrics", "--title", "Hyprune kiosk", "btop"]
 mount = "sun-court-slot-01-kiosk-pillar-01"
 [[apps]]
-workspace = 2
+workspace = 22
+world = "com.hyprune.lumen-reach"
+area = "array-hall"
 class = "HypruneArray"
 title = "Array Hall terminal"
 argv = ["kitty", "--class", "HypruneArray", "--title", "Array Hall terminal"]
 mount = "array-hall-slot-02-operator-desk-01"
 [[apps]]
-workspace = 3
+workspace = 23
+world = "com.hyprune.lumen-reach"
+area = "rime-vault"
 class = "HypruneVault"
 title = "Rime Vault terminal"
 argv = ["kitty", "--class", "HypruneVault", "--title", "Rime Vault terminal"]
 mount = "rime-vault-slot-03-operator-desk-01"
 [[apps]]
-workspace = 4
+workspace = 24
+world = "com.hyprune.lumen-reach"
+area = "signal-rise"
 class = "HypruneSignal"
 title = "Signal Rise terminal"
 argv = ["kitty", "--class", "HypruneSignal", "--title", "Signal Rise terminal"]
