@@ -59,7 +59,10 @@ def bootstrap_world(control, token, location):
         attempt = 0
         while True:
             attempt += 1
-            response = call(f'starter-load-{attempt}', 'world.load', dict(worldId=location['worldId'], spawnId=location['spawnId']))
+            params = dict(worldId=location['worldId'])
+            if location.get('spawnId'):
+                params['spawnId'] = location['spawnId']  # otherwise the world's default spawn
+            response = call(f'starter-load-{attempt}', 'world.load', params)
             if 'result' in response:
                 return
             error = response['error']
@@ -185,8 +188,12 @@ def run(args, extra):
         local = child_environment(runtime, compositor, config_path)
         child_env = {**env, **local, 'HYPRUNE_PROTOCOL': '0.6'}
         child_env.pop('HYPRUNE_LAUNCH_FD', None)
-        locations = json.loads((config_dir / 'locations.json').read_text())
-        location = next((h for h in locations if h['id'] == config['initial_workspace']), None)
+        # Kits compiled since world-defined homes carry the start world; older
+        # user-owned profiles still name an initial workspace in locations.json.
+        location = config.get('start')
+        if location is None:
+            locations = json.loads((config_dir / 'locations.json').read_text())
+            location = next((h for h in locations if h['id'] == config['initial_workspace']), None)
         if location is None:
             raise RuntimeError('Initial workspace has no location in locations.json')
         # A committed load also proves the complete method profile is advertised

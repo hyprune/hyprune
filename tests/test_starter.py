@@ -36,6 +36,71 @@ class KitTests(unittest.TestCase):
         self.assertEqual(kit['homes'][0]['area'], minimal['areas'][0]['id'])
         self.assertIn(kit['apps'][0]['mount'], [a['id'] for a in minimal['anchors']])
 
+    def kit(self, **fields):
+        base = dict(version=1, name='Test', worlds=['minimal'], keymap='core-default-v2', shell_theme='hyprune-dark',
+                    initial_workspace=21, initial_world='com.hyprune.minimal',
+                    apps=[dict(workspace=21, world='com.hyprune.minimal', area='quiet-desk', class_='T', title='T',
+                               argv=['kitty'], mount='quiet-desk-operator-desk')])
+        base.update(fields)
+        for app in base['apps']:
+            if 'class_' in app:
+                app['class'] = app.pop('class_')
+        return base
+
+    def test_world_defined_homes_validation(self):
+        quiet = dict(world='com.hyprune.minimal', area='quiet-desk', spawn='arrival')
+        app = dict(workspace=21, class_='T', title='T', argv=['kitty'])
+        mounted = dict(app, mount='quiet-desk-operator-desk')
+        invalid = [
+            dict(apps=[dict(app, workspace=5)]),                       # neither a kit home nor a default home
+            dict(apps=[dict(app, workspace=20)]),                      # the room is not an area home
+            dict(apps=[mounted]),                                      # a mount needs world and area
+            dict(apps=[dict(mounted, world='com.hyprune.minimal')]),   # world without area
+            dict(initial_world=None, apps=[]),                         # default start needs its world
+            dict(initial_workspace=7, apps=[]),                        # not room, default home or kit home
+            dict(homes=[dict(quiet, workspace=20, label='Q')], apps=[]),   # the room cannot be a kit home
+            dict(homes=[dict(quiet, workspace=31, label='Q')]),        # explicit home wins: no default for its area
+            dict(apps=[dict(mounted, world='com.hyprune.minimal', area='quiet-desk'),
+                       dict(mounted, workspace=22, world='com.hyprune.minimal', area='quiet-desk')]),
+            dict(apps=[dict(mounted, world='com.hyprune.minimal', area='quiet-desk'),
+                       dict(mounted, world='com.hyprune.minimal', area='other')]),
+            dict(settings=dict(windows=dict(workspace_base=0))),       # defaults disabled
+        ]
+        for fields in invalid:
+            kit = self.kit(**fields)
+            if kit.get('initial_world', '') is None:
+                del kit['initial_world']
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                setup.compile_kit(kit, '/p.so', [], {})
+        # Module settings can move the bases; the kit is checked against the merged config.
+        with self.assertRaises(ValueError):
+            setup.compile_kit(self.kit(), '/p.so', [], dict(windows=dict(workspace_base=30)))
+        moved = setup.compile_kit(self.kit(initial_workspace=31, apps=[dict(self.kit()['apps'][0], workspace=31)]),
+                                  '/p.so', [], dict(windows=dict(workspace_base=30)))
+        self.assertIn('hl.bind("SUPER + 1", hl.dsp.focus({ workspace = "31" }))', moved['hyprune.lua'])
+        room = setup.compile_kit(self.kit(initial_workspace=20, initial_spawn='arrival'), '/p.so', [], {})
+        self.assertEqual(room['session.json']['start'], dict(worldId='com.hyprune.minimal', spawnId='arrival'))
+
+    def test_explicit_homes_still_win(self):
+        homes = [dict(workspace=n, label=a, world='com.hyprune.lumen-reach', area=a, spawn=a)
+                 for n, a in [(1, 'sun-court'), (2, 'array-hall')]]
+        homes.append(dict(workspace=30, label='Switchyard', world='com.hyprune.switchyard', spawn='arrival'))
+        apps = [dict(workspace=1, class_='T', title='T', argv=['kitty'], mount='sun-court-slot-01-operator-desk-01')]
+        files = setup.compile_kit(self.kit(homes=homes, initial_workspace=1, initial_world='com.hyprune.lumen-reach',
+                                           apps=apps), '/p.so', [], {})
+        self.assertEqual(files['layout.json']['bindings'],
+                         [dict(id=1, worldId='com.hyprune.lumen-reach', areaId='sun-court'),
+                          dict(id=2, worldId='com.hyprune.lumen-reach', areaId='array-hall')])
+        self.assertEqual(len(files['locations.json']), 3)
+        self.assertEqual(files['layout.json']['placements'][0]['areaId'], 'sun-court')
+        self.assertEqual(files['session.json']['start'], dict(worldId='com.hyprune.lumen-reach', spawnId='sun-court'))
+        lua = files['hyprune.lua']
+        for key, workspace in [(1, 1), (2, 2), (3, 23), (0, 30)]:
+            self.assertIn(f'hl.bind("SUPER + {key}", hl.dsp.focus({{ workspace = "{workspace}" }}))', lua)
+        self.assertNotIn('workspace = "21" }', lua)
+        with self.assertRaises(ValueError):  # the explicit start home names another world
+            setup.compile_kit(self.kit(homes=homes, initial_workspace=1, apps=apps), '/p.so', [], {})
+
     def test_home_manager_uses_native_plugin_option(self):
         files = setup.compile_kit(setup.load_kit(ROOT / 'kits/minimal/kit.toml'), '/p.so', [], {}, True)
         self.assertNotIn('hl.plugin.load', files['hyprune.lua'])
@@ -203,12 +268,22 @@ class SessionTests(unittest.TestCase):
             self.assertEqual((target / 'geometry.bin').read_bytes(), b'original geometry')
 
     def test_supervisor_starts_only_its_child_and_hands_off_one_shot_grant(self):
+        # Legacy profile: the initial workspace names a location in locations.json.
+        self.run_supervisor([dict(id=1, label='Quiet Desk', worldId='com.hyprune.minimal', spawnId='arrival')], {},
+                            dict(worldId='com.hyprune.minimal', spawnId='arrival'))
+
+    def test_supervisor_loads_the_compiled_start_world_without_locations(self):
+        # World-defined homes: no kit locations; the compiled start names the world.
+        self.run_supervisor([], dict(initial_workspace=21, start=dict(worldId='com.hyprune.minimal')),
+                            dict(worldId='com.hyprune.minimal'))
+
+    def run_supervisor(self, locations, session_fields, expected_load):
         # Process/socket fixture; no compositor binary, GPU or owner-session IPC.
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp); runtime = base / 'runtime'; runtime.mkdir(mode=0o700)
             config = base / 'config/hyprune'; config.mkdir(parents=True)
             (config / 'session.lua').write_text('-- fixture\n')
-            (config / 'locations.json').write_text(json.dumps([dict(id=1, worldId='com.hyprune.minimal', spawnId='arrival')]))
+            (config / 'locations.json').write_text(json.dumps(locations))
             fake = base / 'fake-hyprland'
             fake.write_text('''#!/usr/bin/env python3
 import json, os, pathlib, socket, struct, sys
@@ -244,7 +319,7 @@ for _ in range(2):
         reply(hello['id'], dict(protocol='0.6', capabilities=['world.control']))
         size = struct.unpack('!I', exact(peer, 4))[0]; request = json.loads(exact(peer, size))
         assert request['method'] == 'world.load'
-        assert request['params'] == dict(worldId='com.hyprune.minimal', spawnId='arrival')
+        assert request['params'] == json.loads(os.environ['EXPECTED_LOAD']), request['params']
         reply(request['id'], dict(revision=1))
     peer.close()
 server.close(); native.close()
@@ -260,11 +335,12 @@ assert 'HYPRUNE_LAUNCH_FD' not in os.environ
 fd = int(os.environ['HYPRUNE_TOKEN_FD']); token = os.read(fd, 128); os.close(fd)
 peer = socket.socket(socket.AF_UNIX); peer.connect(os.environ['HYPRUNE_SOCKET']); peer.sendall(b'SHEL' + token); peer.close()
 ''')
-            (config / 'session.json').write_text(json.dumps(dict(world_dirs=[], apps=[],
-                initial_workspace=1, shell=[sys.executable, str(shell)])))
+            (config / 'session.json').write_text(json.dumps(dict(dict(world_dirs=[], apps=[],
+                initial_workspace=1, shell=[sys.executable, str(shell)]), **session_fields)))
             env = {**os.environ, 'XDG_CONFIG_HOME': str(base / 'config'),
                    'XDG_DATA_HOME': str(base / 'data'), 'XDG_STATE_HOME': str(base / 'state'),
-                   'XDG_RUNTIME_DIR': str(runtime), 'PYTHONDONTWRITEBYTECODE': '1'}
+                   'XDG_RUNTIME_DIR': str(runtime), 'PYTHONDONTWRITEBYTECODE': '1',
+                   'EXPECTED_LOAD': json.dumps(expected_load)}
             env.pop('HYPRLAND_INSTANCE_SIGNATURE', None)
             result = subprocess.run([sys.executable, str(ROOT / 'runtime/session.py'), '--hyprland', str(fake)],
                                     env=env, capture_output=True, text=True, timeout=15)
