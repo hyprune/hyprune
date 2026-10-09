@@ -66,9 +66,11 @@ The launcher also loads the kit's first world through a separate, one-use
 `world.control` grant. This avoids core's developer-atrium fallback on the first
 toggle. It grants no compositor IPC access to a kit or world package.
 
-Press **Super+F12**. You arrive in **Sun Court**, workspace 1, facing its first
-home. A desk terminal and a btop kiosk are already placed; you can remove them
-from your kit's app list. **F12** exits world mode even if the shell has failed.
+Press **Super+F12**. You arrive in **Sun Court**, facing its first home. The
+world defines the workspaces: the world itself runs on room workspace 20, and
+Sun Court's home is workspace 21 (its area slot 01 plus 20). A desk terminal and
+a btop kiosk are already placed; you can remove them from your kit's app list.
+**F12** exits world mode even if the shell has failed.
 
 If the shell needs restarting after connection loss, restart this Hyprune session.
 Core currently has no production token-renewal API; a systemd `Restart=always`
@@ -98,10 +100,10 @@ the direct way back to the desktop.
 
 ## Pull a terminal onto a desk
 
-On workspace 1, **Super+Enter** opens an additional terminal on the workspace
-wall. Aim at its rectangle, hold **Super+left mouse**, and pull it out into 3D.
-Walk it toward the spare operator desk; use the wheel to change carry distance.
-Release to leave it in space.
+Press **Super+1** for Sun Court's home, workspace 21. There, **Super+Enter**
+opens an additional terminal on the workspace wall. Aim at its rectangle, hold
+**Super+left mouse**, and pull it out into 3D. Walk it toward the spare operator
+desk; use the wheel to change carry distance. Release to leave it in space.
 
 For deliberate mounting, press **2** for the window tool, click the window to
 tag it, then click the desk surface in place mode. The tool's HUD shows the
@@ -118,19 +120,21 @@ native tiling. Return/Recall in Director can recover tools you lose track of.
 
 ![Array Hall with live tools](images/array-hall.jpg)
 
-Hold TAB and choose **Workspaces → Array Hall**. Core selects workspace 2 and
+Hold TAB and choose **Workspaces → Array Hall**. Core selects workspace 22 and
 takes you to its authored home. Super+2 has the same workspace destination;
-Super+3 selects Rime Vault and Super+4 selects Signal Rise. Map's point travel
-offers the warp presentation between locations; auto-drive follows the route.
+Super+3 selects Rime Vault (23) and Super+4 selects Signal Rise (24). Map's
+point travel offers the warp presentation between locations; auto-drive follows
+the route.
 
 ![Signal Rise](images/signal-rise.jpg)
 
 The showcase kit keeps its four homes inside one connected world. For a
-cross-world warp, fork the kit and add a workspace mapped to
-`com.hyprune.switchyard`, spawn `arrival`, and add `switchyard` to `worlds`.
+cross-world warp, fork the kit and add an explicit home on workspace 30 mapped
+to `com.hyprune.switchyard`, spawn `arrival`, and add `switchyard` to `worlds`.
 Select that destination in Workspaces: core loads the installed world and shows
 the warp lifecycle. Switchyard's legacy station docks aren't typed workspace
-homes yet; use them as the dev kit does, with the separate debug home for mounts.
+homes yet; use them as the dev kit does, with Minimal's Quiet Desk (21) as the
+separate debug home for mounts.
 
 ## Keep changing it
 

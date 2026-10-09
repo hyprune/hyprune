@@ -23,10 +23,15 @@ owner's supervised checklist; container tests cannot verify it.
 | `minimal` | One quiet home, terminal, workspace wall and spare lectern; 12 triangles, no textures | Intel tier, bloom off, reduced motion | Included, original CC0 |
 | `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard release TODO |
 
-All kits use core's M3B keymap and the shell's built-in dark theme. Switchyard
-has legacy station docks, so dev maps it as a destination without inventing typed
-home/mount contracts. GPU suitability depends on hardware and output resolution;
-Minimal has no measured iGPU frame-rate guarantee yet.
+All kits use core's M3B keymap and the shell's built-in dark theme. The loaded
+world defines where workspaces are: the world itself runs on room workspace 20,
+and each area's home is 20 plus its slot (Lumen Reach: 21 Sun Court, 22 Array
+Hall, 23 Rime Vault, 24 Signal Rise; Minimal's Quiet Desk: 21). Kits launch their
+apps on those homes and bind Super+1…9 to 21…29. Switchyard has legacy station
+docks and no areas, so dev maps it as an explicit destination on workspace 30
+(Super+0) without inventing typed home/mount contracts. GPU suitability depends
+on hardware and output resolution; Minimal has no measured iGPU frame-rate
+guarantee yet.
 
 ## Install
 
@@ -117,15 +122,17 @@ the existing release archive can use the [local archive path](docs/zero-to-the-t
    move the mouse to look. Space jumps, Shift runs.
 3. Hold **TAB for one second**, then release: Director Map stays open. Escape
    closes it. Settings edits the independently watched keymap.
-4. Press **Super+Enter** for an extra terminal on workspace 1. Aim at it on
-   the wall, hold **Super+left mouse** to pull/carry it, and move it onto the
-   spare desk. Slot **2**, tag the window, then click the desk to mount it.
-   **E** uses it in place; **Super+TAB** returns to walking.
+4. Press **Super+1** for Sun Court's home (workspace 21), then **Super+Enter**
+   for an extra terminal there. Aim at it on the wall, hold **Super+left
+   mouse** to pull/carry it, and move it onto the spare desk. Slot **2**, tag
+   the window, then click the desk to mount it. **E** uses it in place;
+   **Super+TAB** returns to walking.
 5. Hold TAB, open **Workspaces**, and select **Array Hall**. Core takes you
-   to that home. **Super+2** also selects it. Warp out to another installed
-   world through its mapped workspace; add `dev`'s Switchyard destination to a
-   forked kit for a cross-world trip. **F** brings an aimed app or workspace
-   into native 2D; Super+TAB brings you back.
+   to that home (workspace 22). **Super+2** also selects it. Warp out to
+   another installed world through its mapped workspace; add `dev`'s
+   Switchyard destination (workspace 30) to a forked kit for a cross-world
+   trip. **F** brings an aimed app or workspace into native 2D; Super+TAB
+   brings you back.
 
 The full illustrated walk-through is
 [docs/zero-to-the-trailer.md](docs/zero-to-the-trailer.md), ready to wire into
