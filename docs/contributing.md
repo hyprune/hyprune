@@ -26,6 +26,26 @@ From this repo, with sibling checkouts present:
 ./scripts/nix-docker.sh build .#core .#shell .#sdk .#starter .#world-minimal .#default --print-build-logs
 ```
 
+Heavy builds (core, Hyprland, Glaze, every check) belong on the bake host, not
+a laptop. `scripts/nix-remote.sh` stages clean `git archive` snapshots of each
+component at its `flake.lock` revision plus this working tree, then runs the same
+`nixos/nix` container over SSH on `HYPRUNE_BUILD_HOST` (default `10.2.2.2`). No
+GitHub token leaves your machine. The release archives are private, so download
+them first (`gh release download`) and point `HYPRUNE_RELEASE_DIR` at them; they
+are seeded as fixed outputs:
+
+```sh
+HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh flake check --keep-going --print-build-logs
+HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh build --no-link .#core .#kit-lumen-reach
+```
+
+`world-formats` fails when the pinned core's own format registry
+(`src/world/Format.hpp`) can't load a release's recorded `formatVersion`, or
+the bundled Minimal world. `release-worlds` runs the pinned `hyprune-world-check`
+on the real release packages and checks the recorded `formatVersion`. Update
+`worlds/releases.json` (`formatVersion` included), the core pin and
+`component-pins.json` together.
+
 Set `HYPRUNE_COMPONENT_ROOT=/absolute/path/to/hyprune` for another sibling root.
 The script runs `docker run --rm -v "$PWD:/src" -w /src nixos/nix`, mounts the
 component root read-only at `/components`, enables `nix-command flakes`, and adds

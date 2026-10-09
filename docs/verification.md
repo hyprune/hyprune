@@ -3,6 +3,33 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-09: pins to current main
+
+Pins: core `49c8408` (world formats 0.1–0.7, render-on-demand, FSR 1 default),
+shell `043e115` (IPC 0.15), sdk `2a0742d`, schema `6250450`. The previous core
+pin (`5761416`) predated world format registries and could not load Lumen Reach
+0.7.1 (format 0.5). `world-formats` now fails on such a pin.
+
+Packaging changes: core needs lua, libpng, freetype, fontconfig, Vulkan loader
+and headers, and libgbm. meshoptimizer, basisu/zstd and FSR 1 are vendored.
+The offload renderer path is embedded like the daemon's and is installed. CTest
+generates the climbing fixture and uses jsonschema + referencing. The shell
+launches on IPC 0.15, and its tests need node, numpy and Pillow.
+
+Built on 10.2.2.2 (`scripts/nix-remote.sh`, x86_64-linux, clean pinned
+sources), not locally:
+
+| Build / check | Result |
+| --- | --- |
+| core | Built; CTest 21/21 including render tests with software EGL |
+| shell | Built; 103 Python tests OK |
+| sdk | Built; 65 Node tests pass, 0 fail |
+| starter, default, kit-lumen-reach, kit-dev | Built |
+| `nix flake check` (all x86_64 checks) | Passed, including `world-formats`, `release-worlds`, `lua-configs`, `modules`, `contracts` |
+| `release-worlds` | Lumen Reach 0.7.1 (format 0.5): 4 areas, slots 01–04, no warnings; Switchyard 0.1.1 (format 0.2): no warnings |
+| aarch64-linux | Evaluation only (`flake check --no-build --all-systems`); not built |
+| Live session | Not run |
+
 ## Repo layout and build ownership
 
 ```text
@@ -13,7 +40,7 @@ modules/                   NixOS / Home Manager options and session integration
 kits/{lumen-reach,minimal,dev}/kit.toml
 runtime/                   kit compiler, trusted session launcher, installer
 install.sh                 Arch-first entry point
-worlds/releases.json        explicit TODO release URLs/hashes
+worlds/releases.json        release URLs, hashes and formatVersion
 worlds/minimal/             tiny original, data-only CC0 world
 scripts/                   Docker Nix testing, deterministic Minimal generation
 tests/                     starter/config/archive/credential tests
