@@ -270,6 +270,54 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(list(stage.iterdir()), [])
 
 
+class WorldFormatTests(unittest.TestCase):
+    """The pinned core must load every pinned world release's format."""
+    script = ROOT / 'scripts/check-world-formats.py'
+
+    def run_check(self, formats, releases, extra=()):
+        with tempfile.TemporaryDirectory() as temp:
+            core = Path(temp) / 'core'
+            if formats is not None:
+                (core / 'src/world').mkdir(parents=True)
+                listed = ', '.join('"' + v + '"' for v in formats)
+                (core / 'src/world/Format.hpp').write_text(
+                    'inline constexpr std::array<std::string_view, %d> supported{%s};\n' % (len(formats), listed))
+            path = Path(temp) / 'releases.json'
+            path.write_text(json.dumps(releases))
+            return subprocess.run([sys.executable, str(self.script), str(core), str(path), *extra],
+                                  capture_output=True, text=True)
+
+    def test_component_pins_match_flake_lock(self):
+        lock = json.loads((ROOT / 'flake.lock').read_text())['nodes']
+        for repo, pin in json.loads((ROOT / 'component-pins.json').read_text()).items():
+            self.assertEqual(pin['rev'], lock[repo]['locked']['rev'], repo)
+
+    def test_every_release_records_its_format(self):
+        releases = json.loads((ROOT / 'worlds/releases.json').read_text())
+        for name, release in releases.items():
+            self.assertRegex(release.get('formatVersion', ''), r'^0\.[0-9]+$', name)
+
+    def test_supported_release_passes(self):
+        result = self.run_check(['0.1', '0.3', '0.5'], {'w': {'version': '1', 'formatVersion': '0.5'}},
+                                [str(ROOT / 'worlds/minimal/world.json')])
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_unloadable_release_fails(self):
+        result = self.run_check(['0.1', '0.2', '0.3'], {'lumen': {'version': '0.7.1', 'formatVersion': '0.5'}})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('format 0.5 not loadable', result.stderr)
+
+    def test_core_without_registry_fails(self):
+        result = self.run_check(None, {'w': {'version': '1', 'formatVersion': '0.2'}})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('predates the world format registry', result.stderr)
+
+    def test_missing_recorded_format_fails(self):
+        result = self.run_check(['0.2'], {'w': {'version': '1'}})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('lacks formatVersion', result.stderr)
+
+
 class SessionTests(unittest.TestCase):
     def test_worlds_are_real_files_and_existing_packages_survive(self):
         with tempfile.TemporaryDirectory() as temp:
