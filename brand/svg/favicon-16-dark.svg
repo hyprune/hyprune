@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" role="img" aria-labelledby="title desc">
+  <title id="title">Hyprune favicon 16 / dark</title>
+  <desc id="desc">Original Hyprune vector artwork. Rounded linework on a 2:1 isometric grid.</desc>
+  <!-- Removable app tile. -->
+  <rect x="0" y="0" width="16" height="16" rx="3.5" fill="#0f1a27" />
+  
+  <!-- 16 px optical H: two-pixel stems and isometric floor dip. -->
+  <path d="M4 3V12" fill="none" stroke="#8fe8bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M12 3V12" fill="none" stroke="#86d3dc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M4 7 8 9 12 7" fill="none" stroke="#8fe8bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

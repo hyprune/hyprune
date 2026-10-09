@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 256" width="840" height="256" role="img" aria-labelledby="title desc">
+  <title id="title">Hyprune — lockup bold horizontal small mono</title>
+  <desc id="desc">Original Hyprune Traverse Bold. One gate, offset player, unequal windows. Transparent one-ink vector artwork.</desc>
+  
+  <!-- The v2 outer contour and gate endpoints are unchanged. -->
+  
+  <path d="M196 182 208 176V80L128 40 48 80V176L128 216 172 194" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Rear edge is occluded behind the enlarged player; the boundary still has exactly one gate. -->
+  
+  <path d="M128 40V136M48 176 72 164M112 144 128 136 208 176" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Unequal window planes stay on their original isometric coordinates. -->
+  
+  <path d="M68 92 108 72V116L68 136Z" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M152 84 192 104V136L152 116Z" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Player width 20; seven-unit clear separation from its ground shadow. -->
+  
+  <ellipse cx="92" cy="180" rx="13" ry="5" fill="currentColor"/>
+  <rect x="82" y="140" width="20" height="28" rx="10" fill="currentColor" />
+  
+  <!-- Four footsteps instead of seven, followed by the same destination. -->
+  
+  <circle cx="118" cy="178" r="4" fill="currentColor"/>
+  <circle cx="140" cy="176" r="4" fill="currentColor"/>
+  <circle cx="162" cy="180" r="4" fill="currentColor"/>
+  <circle cx="184" cy="188" r="4" fill="currentColor"/>
+  <circle cx="208" cy="200" r="6" fill="currentColor"/>
+  <!-- Wordmark is unchanged: 8-unit strokes at 1.3x = 10.4. Ink gap remains 48. -->
+  <g transform="translate(267.2 81.2) scale(1.3)"><g transform="translate(0 0)"><path d="M0 76V0M0 47C0 20 44 20 44 47V76" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g transform="translate(62 0)"><path d="M0 28 22 72M44 28 10 96" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g transform="translate(124 0)"><path d="M0 96V28M0 43C8 22 44 20 44 52C44 84 8 82 0 62" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g transform="translate(188 0)"><path d="M0 76V28M0 48C0 30 16 22 32 28" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g transform="translate(240 0)"><path d="M0 28V54C0 86 44 86 44 54V28" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g transform="translate(304 0)"><path d="M0 76V28M0 48C0 20 44 20 44 48V76" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g>
+<g transform="translate(368 0)"><path d="M2 52H44C44 18 0 18 0 52C0 80 29 83 43 70" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></g></g>
+</svg>

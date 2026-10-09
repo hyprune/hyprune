@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title desc">
+  <title id="title">Hyprune optical app tile / light</title>
+  <desc id="desc">Original Hyprune vector artwork. Rounded linework on a 2:1 isometric grid.</desc>
+  <!-- Removable app tile. -->
+  <rect x="0" y="0" width="256" height="256" rx="56.0" fill="#f3f7f3" />
+  
+  <!-- Architecture. Equal stroke weight at every structural edge. -->
+  
+  
+  <!-- One and only boundary opening: endpoints (172,194) and (196,182). -->
+  
+  <path d="M196 182 208 176V80L128 40 48 80V176L128 216 172 194" fill="none" stroke="#456c6c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M128 40V136M48 176 128 136 208 176" fill="none" stroke="#456c6c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Offset window heights and unequal panes prevent a paired-eye composition. -->
+  
+  <path d="M68 92 108 72V116L68 136Z" fill="none" stroke="#287567" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M152 84 192 104V136L152 116Z" fill="none" stroke="#2b7182" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Player is left of the room centre; original Habitat proportions retained. -->
+  
+  <ellipse cx="92" cy="180" rx="12" ry="6" fill="#287567"/>
+  <rect x="84" y="145" width="16" height="27" rx="8" fill="#0f1a27" />
+  
+  
+  <!-- Continuous footstep route; room geometry and stroke weights unchanged. -->
+  
+  <!-- A shallow arc of footsteps starts at the shadow, crosses the same gate, and ends at the destination. -->
+  <circle cx="110" cy="180" r="2.5" fill="#0f1a27"/>
+  <circle cx="126" cy="176" r="2.5" fill="#0f1a27"/>
+  <circle cx="142" cy="176" r="2.5" fill="#0f1a27"/>
+  <circle cx="158" cy="180" r="2.5" fill="#0f1a27"/>
+  <circle cx="174" cy="184" r="2.5" fill="#0f1a27"/>
+  <circle cx="184" cy="188" r="2.5" fill="#0f1a27"/>
+  <circle cx="192" cy="192" r="2.5" fill="#0f1a27"/><circle cx="208" cy="200" r="5" fill="#0f1a27"/>
+</svg>

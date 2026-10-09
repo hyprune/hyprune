@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-labelledby="title desc">
+  <title id="title">Hyprune — Here H optical 32 / dark</title>
+  <desc id="desc">Original Hyprune vector artwork. Rounded linework on a 2:1 isometric grid.</desc>
+  
+  <!-- H companion: the isometric floor dip carries the route; no detached punctuation. -->
+  <path d="M8 6V25" fill="none" stroke="#8fe8bf" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M24 6V25" fill="none" stroke="#86d3dc" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M8 15 16 19 24 15" fill="none" stroke="#8fe8bf" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
