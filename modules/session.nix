@@ -35,6 +35,7 @@ let
       Name=Hyprune (${cfg.kit})
       Comment=An explorable Hyprland desktop
       Exec=$out/bin/Hyprland
+      Icon=hyprune
       Type=Application
       DesktopNames=Hyprland
       EOF

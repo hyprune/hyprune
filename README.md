@@ -103,8 +103,13 @@ diff, asks, and writes a timestamped backup before adding an include. There is
 no unattended approval flag and no live reload/plugin-load command. Then launch
 `hyprune-session --config ~/.config/hypr/hyprland.lua` from a TTY.
 
+The script also puts the Hyprune app icon in `~/.local/share/icons/hicolor` and
+writes a login-screen entry to `~/.local/share/hyprune/install/share/wayland-sessions/`;
+it prints the `sudo install` line that lists Hyprune on your login screen, and
+never runs it for you.
+
 `./install.sh --uninstall --dry-run` previews removal; `--uninstall` removes
-unchanged wrappers and moves the installed build to a rollback backup. Removing
+unchanged wrappers and icons and moves the installed build to a rollback backup. Removing
 the include also requires its own diff/confirmation. Config, state, worlds,
 backups and distro dependencies remain yours. Rerunning install preserves edits
 and existing worlds. **Fedora/Debian package installation is not implemented or
@@ -149,7 +154,8 @@ existing profile. [Fork a kit or start from scratch](docs/kits.md).
 
 Code and docs: MIT. Quiet Desk: CC0-1.0. Lumen Reach gallery stills: Hyprune
 contributors, CC-BY-4.0, resized without retouching;
-[image provenance](docs/images/provenance.json). No prototype/game assets are used.
+[image provenance](docs/images/provenance.json). Logo and app icons: Hyprune
+contributors, CC-BY-4.0; usage rules and exports in [brand/](brand/README.md). No prototype/game assets are used.
 
 [Contributor builds and Docker testing](docs/contributing.md) ·
 [Verification report](docs/verification.md) · [Owner release checklist](docs/releases.md)

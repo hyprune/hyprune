@@ -15,6 +15,7 @@ import tempfile
 import time
 import urllib.request
 from setup import ROOT, init, load_kit, render
+import icons
 
 TARGET = '0.56.2'
 DEPENDENCIES = ['base-devel', 'cmake', 'ninja', 'git', 'pkgconf', 'hyprgraphics',
@@ -156,7 +157,7 @@ def local_fingerprint(root):
     return h.hexdigest()
 
 
-def write_managed(path, data, receipt):
+def write_managed(path, data, receipt, mode=0o755):
     path = Path(path)
     if path.exists() or path.is_symlink():
         if path.is_file() and not path.is_symlink() and path.read_bytes() == data:
@@ -166,16 +167,35 @@ def write_managed(path, data, receipt):
             backup = path.with_name(path.name + f'.hyprune-backup-{time.time_ns()}')
             shutil.copy2(path, backup)
             path.write_bytes(data)
-            path.chmod(0o755)
+            path.chmod(mode)
             receipt[str(path)] = digest(path)
-            print(f'Updated managed wrapper; backup: {backup}')
+            print(f'Updated managed file; backup: {backup}')
             return
         raise RuntimeError(f'Refusing to overwrite {path}; move it aside and rerun')
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open('xb') as stream:
         stream.write(data)
-    path.chmod(0o755)
+    path.chmod(mode)
     receipt[str(path)] = digest(path)
+
+
+def install_icons(icon_dir, receipt):
+    """App icons in the user's hicolor theme; unchanged copies are removed on uninstall."""
+    for source, relative in icons.hicolor_files():
+        write_managed(icon_dir / relative, source.read_bytes(), receipt, mode=0o644)
+
+
+def session_entry(exec_path):
+    return ('[Desktop Entry]\nName=Hyprune\nComment=An explorable Hyprland desktop\n'
+            f'Exec="{exec_path}"\nIcon={icons.NAME}\nType=Application\nDesktopNames=Hyprland\n')
+
+
+def write_session_entry(prefix, bin_dir):
+    """Login-screen entry kept in the prefix; installing it system-wide needs root, so we only print how."""
+    path = prefix / 'share/wayland-sessions/hyprune.desktop'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(session_entry(bin_dir / 'hyprune-session'))
+    return path
 
 
 def uninstall(args, prefix, config_dir):
@@ -186,18 +206,18 @@ def uninstall(args, prefix, config_dir):
     receipt = json.loads(receipt_path.read_text())
     config = Path(receipt['hyprland_config']) if receipt.get('hyprland_config') else None
     if args.dry_run:
-        print(f'Dry run: show/ask before removing include from {config}; remove unchanged wrappers and {prefix}.')
+        print(f'Dry run: show/ask before removing include from {config}; remove unchanged wrappers, icons and {prefix}.')
         print(f'Keep user-owned {config_dir}, layouts/worlds, backups and distro dependencies.')
         return
     if config and config.exists() and INCLUDE in config.read_text():
         if not approved_edit(config, config.read_text().replace(INCLUDE, '')):
             raise RuntimeError('Uninstall stopped because the include still references installed packages')
-    for name, expected in receipt.get('wrappers', {}).items():
+    for name, expected in {**receipt.get('wrappers', {}), **receipt.get('icons', {})}.items():
         path = Path(name)
         if path.is_file() and not path.is_symlink() and digest(path) == expected:
             path.unlink()
         elif path.exists():
-            print(f'Preserving edited wrapper: {path}')
+            print(f'Preserving edited file: {path}')
     backup = prefix.with_name(f'install.uninstalled-{time.time_ns()}')
     prefix.rename(backup)
     print(f'Installation moved to {backup} (rollback backup).')
@@ -222,6 +242,7 @@ def main():
     prefix = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'hyprune/install'
     config_dir = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'hyprune'
     bin_dir = Path.home() / '.local/bin'
+    icon_dir = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'icons'
     if args.uninstall:
         uninstall(args, prefix, config_dir)
         return
@@ -255,6 +276,7 @@ def main():
     print('Build core with matching pkg-config headers (hyprpm manifest proposal: proposals/hyprpm.toml).')
     print('Install shell in a Python venv, Quickshell wrapper, SDK CLI; verify and unpack data-only worlds.')
     print(f'Generate once: {config_dir}; backup/refuse replacement of existing files.')
+    print(f'App icons: {icon_dir}/hicolor; login-screen entry: {prefix}/share/wayland-sessions (copy with sudo yourself).')
     print('Hyprland configuration is optional: --hyprland-config PATH shows a diff and asks.')
     for blocker in blockers:
         print('BLOCKED:', blocker)
@@ -355,6 +377,9 @@ def main():
                 ('export HYPRUNE_PLUGIN=' + shlex.quote(str(active / 'lib/hyprune-core.so')) + '\n' if name == 'hyprune-session' else '') +
                 'exec ' + shlex.join(argv) + ' "$@"\n').encode()
         write_managed(bin_dir / name, data, wrappers)
+    installed_icons = dict(previous.get('icons', {}))
+    install_icons(icon_dir, installed_icons)
+    session_entry = write_session_entry(prefix, bin_dir)
     # Existing user-owned includes keep their previous plugin path; old generations stay installed.
     if active.is_symlink():
         if not active.resolve().is_relative_to(prefix / 'versions'):
@@ -371,7 +396,7 @@ def main():
         old = config.read_text() if config.exists() else ''
         if INCLUDE in old or approved_edit(config, old + ('\n' if old and not old.endswith('\n') else '') + INCLUDE):
             configured = str(config)
-    receipt = dict(wrappers=wrappers, generation=str(generation), hyprland_config=configured)
+    receipt = dict(wrappers=wrappers, icons=installed_icons, generation=str(generation), hyprland_config=configured)
     receipt_file = prefix / 'receipt.json'
     receipt_data = json.dumps(receipt, indent=2) + '\n'
     if not receipt_file.exists() or receipt_file.read_text() != receipt_data:
@@ -379,6 +404,7 @@ def main():
             shutil.copy2(receipt_file, prefix / f'receipt.backup-{time.time_ns()}.json')
         receipt_file.write_text(receipt_data)
     print('Installed. Put ~/.local/bin on PATH; log out, then run hyprune-session from a TTY.')
+    print(f'To list Hyprune on a login screen: sudo install -Dm644 {session_entry} /usr/share/wayland-sessions/hyprune.desktop')
     print('For your normal Lua config: hyprune-session --config PATH (must include hyprune.lua).')
 
 

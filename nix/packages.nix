@@ -113,6 +113,9 @@ let
       mkdir -p $out/share/hyprune $out/bin
       cp -r runtime kits worlds $out/share/hyprune/
       cp LICENSE $out/share/hyprune/
+      # App icons (H / optical / full room by size) and the brand licence note.
+      ${python}/bin/python3 runtime/icons.py $out/share/icons
+      install -Dm644 brand/README.md $out/share/licenses/hyprune-brand/README.md
       makeWrapper ${python}/bin/python3 $out/bin/hyprune-setup \
         --add-flags "$out/share/hyprune/runtime/setup.py" \
         --set HYPRUNE_INPUT_DEFAULT ${core}/share/hyprune/input.default.json \
