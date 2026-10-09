@@ -3,21 +3,33 @@ let
   inherit (pkgs) lib;
   hyprland = import ./hyprland.nix { inherit inputs pkgs; };
   python = pkgs.python3.withPackages (p: [ p.jsonschema ]);
+  # Core's wire/schema tests validate with jsonschema + referencing.
+  testPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing ]);
+  # Shell's own tests also compute HUD contrast (numpy, Pillow) and run QML JS with node.
+  shellTestPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing p.numpy p.pillow ]);
   core = hyprland.stdenv.mkDerivation {
     pname = "hyprune-core";
     version = "0.3.0";
     src = inputs.core;
-    nativeBuildInputs = with pkgs; [ cmake ninja pkg-config python3 wayland-scanner ];
-    buildInputs = hyprland.buildInputs ++ (with pkgs; [ libGL libxml2 openssl ]);
+    nativeBuildInputs = (with pkgs; [ cmake ninja pkg-config wayland-scanner ]) ++ [ testPython ];
+    # meshoptimizer, basisu/zstd (KTX2) and FidelityFX FSR 1 are vendored in
+    # third_party; overlay text, the optional Vulkan offload renderer and the
+    # Lua config need system libraries.
+    buildInputs = hyprland.buildInputs ++ (with pkgs; [
+      libGL libxml2 openssl lua libpng freetype fontconfig vulkan-loader vulkan-headers libgbm
+    ]);
     propagatedBuildInputs = [ hyprland.dev ];
-    # Upstream currently embeds the build-tree helper path and has no install rule.
-    # Keep that packaging adjustment here rather than changing the component.
+    # Upstream embeds build-tree helper paths (daemon, offload renderer) and has no
+    # install rule. Keep that packaging adjustment here rather than changing core.
     postPatch = ''
-      substituteInPlace CMakeLists.txt --replace-fail \
-        ${lib.escapeShellArg ("$" + "{CMAKE_CURRENT_BINARY_DIR}/hypruned")} "$out/bin/hypruned"
+      substituteInPlace CMakeLists.txt \
+        --replace-fail ${lib.escapeShellArg ("$" + "{CMAKE_CURRENT_BINARY_DIR}/hypruned")} "$out/bin/hypruned" \
+        --replace-fail ${lib.escapeShellArg ("$" + "{CMAKE_CURRENT_BINARY_DIR}/hyprune-renderer")} "$out/bin/hyprune-renderer"
     '';
+    # Generated (gitignored) CTest fixtures: m2.py also writes atrium and materials.
     preConfigure = ''
       python3 tests/fixtures/m2.py
+      python3 tests/fixtures/climbing.py
     '';
     cmakeFlags = [ "-DBUILD_TESTING=ON" ];
     nativeCheckInputs = [ pkgs.mesa ];
@@ -34,7 +46,7 @@ let
     installPhase = ''
       mkdir -p $out/lib $out/bin $out/share/hyprune
       cp hyprune-core.so $out/lib/hyprune-core.so
-      cp hypruned hyprune-world-check $out/bin/
+      cp hypruned hyprune-renderer hyprune-world-check $out/bin/
       cp ../config/input.default.json $out/share/hyprune/input.default.json
       mkdir -p $out/share/licenses/hyprune-core
       cp ../LICENSE $out/share/licenses/hyprune-core/
@@ -52,12 +64,14 @@ let
       cp -r qml bridge protocol $out/share/hyprune-shell/
       cp LICENSE README.md $out/share/hyprune-shell/
       makeWrapper ${python}/bin/python3 $out/bin/hyprune-shell \
-        --add-flags "$out/share/hyprune-shell/bridge/launch.py --protocol 0.6" \
+        --add-flags "$out/share/hyprune-shell/bridge/launch.py --protocol 0.15" \
         --prefix PATH : ${lib.makeBinPath [ pkgs.quickshell ]} \
         --prefix QML_IMPORT_PATH : ${pkgs.qt6.qt5compat}/lib/qt-6/qml
     '';
     doInstallCheck = true;
-    installCheckPhase = ''${python}/bin/python3 -m unittest discover -s tests -v'';
+    installCheckPhase = ''
+      PATH=${pkgs.nodejs}/bin:$PATH ${shellTestPython}/bin/python3 -m unittest discover -s tests -v
+    '';
     meta.license = lib.licenses.mit;
   };
   sdk = pkgs.buildNpmPackage {

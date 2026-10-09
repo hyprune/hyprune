@@ -19,7 +19,8 @@ from setup import ROOT, init, load_kit, render
 TARGET = '0.56.2'
 DEPENDENCIES = ['base-devel', 'cmake', 'ninja', 'git', 'pkgconf', 'hyprgraphics',
                 'pixman', 'libdrm', 'libxkbcommon', 'pango', 'wayland', 'wayland-protocols',
-                'mesa', 'libxml2', 'openssl', 'lua', 'quickshell', 'qt6-5compat',
+                'mesa', 'libxml2', 'openssl', 'lua', 'libpng', 'freetype2', 'fontconfig',
+                'vulkan-icd-loader', 'vulkan-headers', 'quickshell', 'qt6-5compat',
                 'python', 'python-pip', 'nodejs', 'npm', 'kitty', 'btop', 'zstd']
 INCLUDE = '''-- BEGIN HYPRUNE STARTER
 dofile((os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/hyprune/hyprune.lua")
@@ -283,12 +284,15 @@ def main():
                 source(repo, pins[repo]['rev'], args.source_root, generation / repo)
             core = generation / 'core'
             cmake = core / 'CMakeLists.txt'
-            cmake.write_text(cmake.read_text().replace('${CMAKE_CURRENT_BINARY_DIR}/hypruned', str(generation / 'bin/hypruned')))
+            # Core embeds build-tree helper paths (daemon, offload renderer); point them at the generation.
+            cmake.write_text(cmake.read_text()
+                             .replace('${CMAKE_CURRENT_BINARY_DIR}/hypruned', str(generation / 'bin/hypruned'))
+                             .replace('${CMAKE_CURRENT_BINARY_DIR}/hyprune-renderer', str(generation / 'bin/hyprune-renderer')))
             run('cmake', '-S', core, '-B', core / 'build', '-G', 'Ninja', '-DBUILD_TESTING=OFF', '-DCMAKE_BUILD_TYPE=RelWithDebInfo')
             run('cmake', '--build', core / 'build', '-j', args.jobs)
             (generation / 'bin').mkdir()
             (generation / 'lib').mkdir()
-            for name in ['hypruned', 'hyprune-world-check']:
+            for name in ['hypruned', 'hyprune-renderer', 'hyprune-world-check']:
                 shutil.copy2(core / 'build' / name, generation / 'bin' / name)
             shutil.copy2(core / 'build/hyprune-core.so', generation / 'lib/hyprune-core.so')
             run(sys.executable, '-m', 'venv', generation / 'venv')
