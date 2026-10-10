@@ -3,6 +3,15 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-10: core 9e50dfb, Lumen Reach 0.9.0
+
+Core `9e50dfb` (autodrive on stairs, idle wall recomposition fix, walls in
+native stacking order); shell, sdk and schema unchanged. No packaging change.
+On 10.2.2.2: `nix flake check` passed (core CTest 23/23 including the new
+autodrive test). `release-worlds` loads Lumen Reach 0.9.0 (format 0.7, four
+canonical areas, slots 01–04, no warnings) and Switchyard 0.1.1.
+`world-formats` passed. kit-lumen-reach, kit-dev and default were built.
+
 ## 2026-10-10: pin bump (IPC 0.16, Lumen Reach 0.8.0)
 
 Pins: core `35ace21` (IPC 0.16 upscaler, shader specialisation, parallel

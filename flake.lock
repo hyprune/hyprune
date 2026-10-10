@@ -36,11 +36,11 @@
     "core": {
       "flake": false,
       "locked": {
-        "lastModified": 1791623042,
-        "narHash": "sha256-fi7I0Vpe78AgNAr6schzpm4QOuRGF3QpmYP5cywC5+s=",
+        "lastModified": 1791633259,
+        "narHash": "sha256-CD4VK8Zu/uQdgqslHX24ktmgxcFAee1ziqF1iP/Wyag=",
         "owner": "hyprune",
         "repo": "core",
-        "rev": "35ace211a6be4ea87de8305392a5f4a8b67f5337",
+        "rev": "9e50dfbb269737aca5f77d5a4120f988bb292b4e",
         "type": "github"
       },
       "original": {
