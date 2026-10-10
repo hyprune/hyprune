@@ -3,6 +3,18 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-10: core a804191, shell 6d293bb; shell catalog in drift checks
+
+A live session with Lumen Reach 0.9.0 died in the shell launcher ("Unsupported
+world format"): shell 21c90fd's catalog stopped at 0.5, and the meta checks only
+looked at core. Pins: core `a804191` (single ready notice), shell `6d293bb`
+(catalog 0.1–0.7, derived from vendored schema pins). `world-formats` now also
+imports the pinned shell catalog (fails on 21c90fd: "format 0.7 not accepted by
+pinned shell (0.1, 0.2, 0.3, 0.4, 0.5)"). `release-worlds` validates each real
+package with that catalog and with `hyprune world validate`. On 10.2.2.2:
+`nix flake check` passed (core CTest 23/23, shell 120 OK, 1 skipped). Kits were
+built.
+
 ## 2026-10-10: core 9e50dfb, Lumen Reach 0.9.0
 
 Core `9e50dfb` (autodrive on stairs, idle wall recomposition fix, walls in
