@@ -3,6 +3,23 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-10: core 9587032, shell 78e6749, sdk be7a020, schema f76922b (IPC 0.19)
+
+IPC 0.18 (offload device selection, automatic power cap and its source) and
+0.19 (player settings, view bob, reticle and reach limits) across schema, SDK,
+shell and core. Core `9587032` also includes:
+- the NVIDIA consumer offload fix;
+- carry sweeps that query the world BVH (a back-face grab in Lumen Reach blocked
+  the press handler for 234–239 ms on the laptop and 561 ms on 10.2.2.2; it now
+  takes 0.15–0.17 ms);
+- live titles for room windows;
+- the room-20 smoke run;
+- the remote nightly.
+
+Core `9587032` was locked by hand before it was pushed: rev, commit time, and
+`nix hash path` of its `git archive` tree on 10.2.2.2. On 10.2.2.2
+(`scripts/nix-remote.sh`): `nix flake check` passed, with core CTest 27/27.
+
 ## 2026-10-10: sdk e2b458e, schema bf8d401 (derived version lists)
 
 Schema `bf8d401` derives IPC protocol and contract versions (after `f9f357d`
