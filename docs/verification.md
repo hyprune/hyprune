@@ -3,6 +3,17 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-10: sdk e2b458e, schema bf8d401 (derived version lists)
+
+Schema `bf8d401` derives IPC protocol and contract versions (after `f9f357d`
+derived world formats) from its versioned directories. SDK `e2b458e` vendors
+it and generates `PROTOCOLS`/`ProtocolMethods` from the vendored pins
+(generation fails if a pin lacks a method map). Locked by hand before those
+commits were pushed: narHash from `git archive` bytes, method checked against
+sdk `0cf79a4`'s existing entry, and equal to the path-override hashes on
+10.2.2.2. On 10.2.2.2: `nix flake check` passed (sdk 66 pass, 2 skipped).
+`release-worlds` re-ran with the new SDK. Kits were built.
+
 ## 2026-10-10: core a804191, shell 6d293bb; shell catalog in drift checks
 
 A live session with Lumen Reach 0.9.0 died in the shell launcher ("Unsupported
