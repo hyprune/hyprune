@@ -3,6 +3,27 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-10: pin bump (IPC 0.16, Lumen Reach 0.8.0)
+
+Pins: core `35ace21` (IPC 0.16 upscaler, shader specialisation, parallel
+compile, capture watermark, world 0.7), shell `21c90fd` (IPC 0.16 upscaler UI,
+brand mark), sdk `0cf79a4`, schema `1ae2ed1`. The only packaging change: the
+shell launches on IPC 0.16. Brand masks are compiled into core. New core and
+shell files need no extra inputs.
+
+Built on 10.2.2.2 (`scripts/nix-remote.sh`, x86_64-linux), not locally:
+
+| Build / check | Result |
+| --- | --- |
+| `nix flake check` (all x86_64 checks) | Passed |
+| core | CTest 22/22, including capture-watermark and render (software EGL) |
+| shell | 118 tests OK, 1 skipped (brand sync needs a sibling meta checkout) |
+| sdk | 66 pass, 0 fail |
+| `world-formats` | lumen-reach 0.7, switchyard 0.2, minimal 0.3 within core 0.1–0.7 |
+| `release-worlds` | Lumen Reach 0.8.0 (format 0.7): 4 areas, slots 01–04, no warnings; Switchyard 0.1.1: no warnings |
+| kit-lumen-reach, kit-dev, kit-minimal/default | Built (Lumen Reach 0.8.0 package, app icon installed) |
+| aarch64-linux | Evaluation only |
+
 ## 2026-10-09: pins to current main
 
 Pins: core `49c8408` (world formats 0.1–0.7, render-on-demand, FSR 1 default),

@@ -64,7 +64,7 @@ let
       cp -r qml bridge protocol $out/share/hyprune-shell/
       cp LICENSE README.md $out/share/hyprune-shell/
       makeWrapper ${python}/bin/python3 $out/bin/hyprune-shell \
-        --add-flags "$out/share/hyprune-shell/bridge/launch.py --protocol 0.15" \
+        --add-flags "$out/share/hyprune-shell/bridge/launch.py --protocol 0.16" \
         --prefix PATH : ${lib.makeBinPath [ pkgs.quickshell ]} \
         --prefix QML_IMPORT_PATH : ${pkgs.qt6.qt5compat}/lib/qt-6/qml
     '';
