@@ -39,10 +39,13 @@ HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh flake check --keep-goi
 HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh build --no-link .#core .#kit-lumen-reach
 ```
 
-`world-formats` fails when the pinned core's own format registry
-(`src/world/Format.hpp`) can't load a release's recorded `formatVersion`, or
-the bundled Minimal world. `release-worlds` runs the pinned `hyprune-world-check`
-on the real release packages and checks the recorded `formatVersion`. Update
+`world-formats` fails when a release's recorded `formatVersion` (or the
+bundled Minimal world's) is missing from the pinned core's format registry
+(`src/world/Format.hpp`) or from the pinned shell's launcher catalog
+(`bridge/protocol.py` `WORLD_VALIDATORS`, imported as-is). `release-worlds` runs
+every real consumer on the real release packages: core's `hyprune-world-check`,
+the shell catalog validator and the SDK's `hyprune world validate`. It also
+checks the recorded `formatVersion`. Update
 `worlds/releases.json` (`formatVersion` included), the core pin and
 `component-pins.json` together.
 

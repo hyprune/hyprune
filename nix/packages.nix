@@ -128,10 +128,8 @@ let
     '';
     meta = { license = lib.licenses.mit; mainProgram = "hyprune-session"; };
   };
-in {
+in lib.mapAttrs' (name: _: lib.nameValuePair "world-${name}" (releaseWorld name)) releases // {
   inherit core shell sdk starter world-minimal hyprland;
-  world-lumen-reach = releaseWorld "lumen-reach";
-  world-switchyard = releaseWorld "switchyard";
   default = pkgs.symlinkJoin {
     name = "hyprune-minimal";
     paths = [ core shell sdk starter world-minimal pkgs.kitty pkgs.btop ];

@@ -284,8 +284,26 @@ class WorldFormatTests(unittest.TestCase):
                     'inline constexpr std::array<std::string_view, %d> supported{%s};\n' % (len(formats), listed))
             path = Path(temp) / 'releases.json'
             path.write_text(json.dumps(releases))
-            return subprocess.run([sys.executable, str(self.script), str(core), str(path), *extra],
+            return subprocess.run([sys.executable, str(self.script), '--core', str(core), str(path), *extra],
                                   capture_output=True, text=True)
+
+    def run_shell(self, formats, releases):
+        with tempfile.TemporaryDirectory() as temp:
+            bridge = Path(temp) / 'shell/bridge'
+            bridge.mkdir(parents=True)
+            # The launcher catalog shape: version -> validator (only keys matter here).
+            (bridge / 'protocol.py').write_text('WORLD_VALIDATORS = {%s}\n' % ', '.join(repr(v) + ': None' for v in formats))
+            path = Path(temp) / 'releases.json'
+            path.write_text(json.dumps(releases))
+            return subprocess.run([sys.executable, str(self.script), '--shell', str(bridge.parent), str(path)],
+                                  capture_output=True, text=True)
+
+    def test_shell_catalog_must_accept_release_formats(self):
+        ok = self.run_shell(['0.1', '0.5', '0.7'], {'lumen': {'version': '0.9.0', 'formatVersion': '0.7'}})
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        old = self.run_shell(['0.1', '0.2', '0.3', '0.4', '0.5'], {'lumen': {'version': '0.9.0', 'formatVersion': '0.7'}})
+        self.assertNotEqual(old.returncode, 0)
+        self.assertIn('not accepted by pinned shell', old.stderr)
 
     def test_component_pins_match_flake_lock(self):
         lock = json.loads((ROOT / 'flake.lock').read_text())['nodes']
@@ -305,7 +323,7 @@ class WorldFormatTests(unittest.TestCase):
     def test_unloadable_release_fails(self):
         result = self.run_check(['0.1', '0.2', '0.3'], {'lumen': {'version': '0.7.1', 'formatVersion': '0.5'}})
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('format 0.5 not loadable', result.stderr)
+        self.assertIn('format 0.5 not accepted by pinned core', result.stderr)
 
     def test_core_without_registry_fails(self):
         result = self.run_check(None, {'w': {'version': '1', 'formatVersion': '0.2'}})

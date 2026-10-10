@@ -38,7 +38,11 @@
         };
         worlds = pkgs.mkShell { packages = with pkgs; [ nodejs python3 zstd ]; };
       });
-      checks = each (system: let pkgs = pkgsFor system; p = self.packages.${system}; in {
+      checks = each (system: let
+        pkgs = pkgsFor system; p = self.packages.${system};
+        releases = builtins.fromJSON (builtins.readFile ./worlds/releases.json);
+        catalogPython = pkgs.python3.withPackages (ps: [ ps.jsonschema ps.referencing ]);
+      in {
         inherit (p) core shell sdk starter;
         contracts = pkgs.runCommand "hyprune-starter-checks" {
           nativeBuildInputs = [ pkgs.python3 pkgs.shellcheck pkgs.zstd pkgs.git ];
@@ -50,20 +54,24 @@
           touch $out
         '';
         modules = import ./nix/module-checks.nix { inherit self inputs pkgs; };
-        # Pins must not drift: the pinned core's own format registry has to cover
-        # every pinned release world (cheap: core source only, no build).
-        world-formats = pkgs.runCommand "hyprune-world-format-check" { nativeBuildInputs = [ pkgs.python3 ]; } ''
-          python3 ${self}/scripts/check-world-formats.py ${inputs.core} ${self}/worlds/releases.json \
-            ${self}/worlds/minimal/world.json > $out
+        # Pins must not drift: the pinned core's own format registry and the pinned
+        # shell launcher catalog both have to cover every pinned release world.
+        world-formats = pkgs.runCommand "hyprune-world-format-check" { nativeBuildInputs = [ catalogPython ]; } ''
+          python3 ${self}/scripts/check-world-formats.py --core ${inputs.core} --shell ${inputs.shell} \
+            ${self}/worlds/releases.json ${self}/worlds/minimal/world.json > $out
         '';
-        # The real loader on the real packages; recorded formatVersion must match.
-        release-worlds = pkgs.runCommand "hyprune-release-world-check" { nativeBuildInputs = [ pkgs.python3 ]; } (
-          pkgs.lib.concatMapStrings (name: let r = (builtins.fromJSON (builtins.readFile ./worlds/releases.json)).${name}; in ''
+        # The real consumers on the real packages: core's loader, the shell launcher
+        # catalog and the SDK CLI; recorded formatVersion must match.
+        release-worlds = pkgs.runCommand "hyprune-release-world-check" { nativeBuildInputs = [ catalogPython ]; } (
+          pkgs.lib.concatMapStrings (name: let r = releases.${name}; in ''
             world=${p."world-${name}"}/share/hyprune/worlds/${r.id}
             ${p.core}/bin/hyprune-world-check $world >> $out
+            ${p.sdk}/bin/hyprune world validate $world > /dev/null
             python3 -c 'import json,sys; v=json.load(open(sys.argv[1]))["formatVersion"]; sys.exit(None if v==sys.argv[2] else f"{sys.argv[1]}: formatVersion {v}, releases.json says {sys.argv[2]}")' \
               $world/world.json ${r.formatVersion}
-          '') [ "lumen-reach" "switchyard" ]);
+            python3 ${self}/scripts/check-world-formats.py --shell ${p.shell}/share/hyprune-shell --validate \
+              ${self}/worlds/releases.json $world/world.json >> $out
+          '') (builtins.attrNames releases));
         minimal-world = pkgs.runCommand "hyprune-minimal-world-check" {} ''
           ${p.core}/bin/hyprune-world-check ${p.world-minimal}/share/hyprune/worlds/com.hyprune.minimal > $out
         '';
