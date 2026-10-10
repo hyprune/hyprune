@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Heavy Nix builds/checks on the bake host (AGENTS.md rule 3), in the same
+# Heavy Nix builds/checks on a remote build host over SSH, in the same
 # nixos/nix container as scripts/nix-docker.sh. Components are clean
 # `git archive` snapshots at the flake.lock revisions (no GitHub token leaves
 # this machine). HYPRUNE_RELEASE_DIR may hold release tarballs to seed as fixed
@@ -8,7 +8,7 @@
 set -euo pipefail
 SCRIPT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 COMPONENT_ROOT=${HYPRUNE_COMPONENT_ROOT:-$(dirname -- "$SCRIPT_ROOT")}
-HOST=${HYPRUNE_BUILD_HOST:-10.2.2.2}
+HOST=${HYPRUNE_BUILD_HOST:?set HYPRUNE_BUILD_HOST to an SSH host with Docker}
 REMOTE=${HYPRUNE_BUILD_DIR:-hyprune-nixbuild}
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT

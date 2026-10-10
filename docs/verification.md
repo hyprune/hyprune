@@ -11,7 +11,7 @@ looked at core. Pins: core `a804191` (single ready notice), shell `6d293bb`
 (catalog 0.1–0.7, derived from vendored schema pins). `world-formats` now also
 imports the pinned shell catalog (fails on 21c90fd: "format 0.7 not accepted by
 pinned shell (0.1, 0.2, 0.3, 0.4, 0.5)"). `release-worlds` validates each real
-package with that catalog and with `hyprune world validate`. On 10.2.2.2:
+package with that catalog and with `hyprune world validate`. On the build host:
 `nix flake check` passed (core CTest 23/23, shell 120 OK, 1 skipped). Kits were
 built.
 
@@ -19,7 +19,7 @@ built.
 
 Core `9e50dfb` (autodrive on stairs, idle wall recomposition fix, walls in
 native stacking order); shell, sdk and schema unchanged. No packaging change.
-On 10.2.2.2: `nix flake check` passed (core CTest 23/23 including the new
+On the build host: `nix flake check` passed (core CTest 23/23 including the new
 autodrive test). `release-worlds` loads Lumen Reach 0.9.0 (format 0.7, four
 canonical areas, slots 01–04, no warnings) and Switchyard 0.1.1.
 `world-formats` passed. kit-lumen-reach, kit-dev and default were built.
@@ -32,7 +32,7 @@ brand mark), sdk `0cf79a4`, schema `1ae2ed1`. The only packaging change: the
 shell launches on IPC 0.16. Brand masks are compiled into core. New core and
 shell files need no extra inputs.
 
-Built on 10.2.2.2 (`scripts/nix-remote.sh`, x86_64-linux), not locally:
+Built on the build host (`scripts/nix-remote.sh`, x86_64-linux), not locally:
 
 | Build / check | Result |
 | --- | --- |
@@ -58,7 +58,7 @@ The offload renderer path is embedded like the daemon's and is installed. CTest
 generates the climbing fixture and uses jsonschema + referencing. The shell
 launches on IPC 0.15, and its tests need node, numpy and Pillow.
 
-Built on 10.2.2.2 (`scripts/nix-remote.sh`, x86_64-linux, clean pinned
+Built on the build host (`scripts/nix-remote.sh`, x86_64-linux, clean pinned
 sources), not locally:
 
 | Build / check | Result |

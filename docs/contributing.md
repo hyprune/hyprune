@@ -26,10 +26,10 @@ From this repo, with sibling checkouts present:
 ./scripts/nix-docker.sh build .#core .#shell .#sdk .#starter .#world-minimal .#default --print-build-logs
 ```
 
-Heavy builds (core, Hyprland, Glaze, every check) belong on the bake host, not
-a laptop. `scripts/nix-remote.sh` stages clean `git archive` snapshots of each
+Heavy builds (core, Hyprland, Glaze, every check) are best run on a separate
+build host rather than a laptop. `scripts/nix-remote.sh` stages clean `git archive` snapshots of each
 component at its `flake.lock` revision plus this working tree, then runs the same
-`nixos/nix` container over SSH on `HYPRUNE_BUILD_HOST` (default `10.2.2.2`). No
+`nixos/nix` container over SSH on `HYPRUNE_BUILD_HOST` (required). No
 GitHub token leaves your machine. The release archives are private, so download
 them first (`gh release download`) and point `HYPRUNE_RELEASE_DIR` at them; they
 are seeded as fixed outputs:
