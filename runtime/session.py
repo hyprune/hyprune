@@ -18,7 +18,7 @@ from setup import init
 
 TARGET = '0.56.2'
 CAPABILITIES = ['state.read', 'world.control', 'surface.control', 'movement.control',
-                'shell.control', 'runtime.control', 'input.control']
+                'shell.control', 'runtime.control', 'input.control', 'quest.control']
 
 
 def bootstrap_world(control, token, location):
