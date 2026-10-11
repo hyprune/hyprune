@@ -8,7 +8,15 @@
 set -euo pipefail
 SCRIPT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 COMPONENT_ROOT=${HYPRUNE_COMPONENT_ROOT:-$(dirname -- "$SCRIPT_ROOT")}
-HOST=${HYPRUNE_BUILD_HOST:?set HYPRUNE_BUILD_HOST to an SSH host with Docker}
+# HYPRUNE_BUILD_HOST: the environment, else the optional ~/.config/hyprune/dev.env
+# (KEY=VALUE lines; machine-specific values never live in this repository).
+if [[ -z ${HYPRUNE_BUILD_HOST:-} ]]; then
+  DEV_ENV=${XDG_CONFIG_HOME:-$HOME/.config}/hyprune/dev.env
+  if [[ -r $DEV_ENV ]]; then
+    HYPRUNE_BUILD_HOST=$(sed -nE "s/^[[:space:]]*(export[[:space:]]+)?HYPRUNE_BUILD_HOST[[:space:]]*=[[:space:]]*[\"']?([^\"']*)[\"']?[[:space:]]*$/\2/p" "$DEV_ENV" | tail -n 1)
+  fi
+fi
+HOST=${HYPRUNE_BUILD_HOST:?set HYPRUNE_BUILD_HOST (environment or ~/.config/hyprune/dev.env) to an SSH host with Docker}
 REMOTE=${HYPRUNE_BUILD_DIR:-hyprune-nixbuild}
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT

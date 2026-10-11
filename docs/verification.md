@@ -10,14 +10,14 @@ IPC 0.18 (offload device selection, automatic power cap and its source) and
 shell and core. Core `9587032` also includes:
 - the NVIDIA consumer offload fix;
 - carry sweeps that query the world BVH (a back-face grab in Lumen Reach blocked
-  the press handler for 234–239 ms on the laptop and 561 ms on 10.2.2.2; it now
+  the press handler for 234–239 ms on the laptop and 561 ms on the bake host; it now
   takes 0.15–0.17 ms);
 - live titles for room windows;
 - the room-20 smoke run;
 - the remote nightly.
 
 Core `9587032` was locked by hand before it was pushed: rev, commit time, and
-`nix hash path` of its `git archive` tree on 10.2.2.2. On 10.2.2.2
+`nix hash path` of its `git archive` tree on the bake host. On the bake host
 (`scripts/nix-remote.sh`): `nix flake check` passed, with core CTest 27/27.
 
 ## 2026-10-10: sdk e2b458e, schema bf8d401 (derived version lists)
@@ -28,7 +28,7 @@ it and generates `PROTOCOLS`/`ProtocolMethods` from the vendored pins
 (generation fails if a pin lacks a method map). Locked by hand before those
 commits were pushed: narHash from `git archive` bytes, method checked against
 sdk `0cf79a4`'s existing entry, and equal to the path-override hashes on
-10.2.2.2. On 10.2.2.2: `nix flake check` passed (sdk 66 pass, 2 skipped).
+the bake host. On the bake host: `nix flake check` passed (sdk 66 pass, 2 skipped).
 `release-worlds` re-ran with the new SDK. Kits were built.
 
 ## 2026-10-10: core a804191, shell 6d293bb; shell catalog in drift checks

@@ -29,7 +29,7 @@ From this repo, with sibling checkouts present:
 Heavy builds (core, Hyprland, Glaze, every check) are best run on a separate
 build host rather than a laptop. `scripts/nix-remote.sh` stages clean `git archive` snapshots of each
 component at its `flake.lock` revision plus this working tree, then runs the same
-`nixos/nix` container over SSH on `HYPRUNE_BUILD_HOST` (required). No
+`nixos/nix` container over SSH on `HYPRUNE_BUILD_HOST` (required; see Developer settings). No
 GitHub token leaves your machine. The release archives are private, so download
 them first (`gh release download`) and point `HYPRUNE_RELEASE_DIR` at them; they
 are seeded as fixed outputs:
@@ -38,6 +38,23 @@ are seeded as fixed outputs:
 HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh flake check --keep-going --print-build-logs
 HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh build --no-link .#core .#kit-lumen-reach
 ```
+
+### Developer settings (`dev.env`)
+
+Machine-specific values never go into any Hyprune repository. Tools read them
+from the environment, or from an optional `~/.config/hyprune/dev.env`
+(`$XDG_CONFIG_HOME` if set): one `KEY=VALUE` per line, `#` comments. The
+environment wins.
+
+| Key | Used by |
+| --- | --- |
+| `HYPRUNE_BUILD_HOST` | `scripts/nix-remote.sh`; core `dev/remote` (SSH host with Docker / the test host) |
+| `HYPRUNE_BAKE_HOST` | worlds bake wrappers (SSH host with Blender; `local` on that host itself) |
+| `HYPRUNE_GALLERY_DIR` | core, shell and worlds review stills and pages |
+| `HYPRUNE_VIDEO_DIR` | core, shell and worlds finished demo videos |
+
+A tool whose gallery or video directory isn't configured prints one warning
+naming where its output went instead.
 
 `world-formats` fails when a release's recorded `formatVersion` (or the
 bundled Minimal world's) is missing from the pinned core's format registry
