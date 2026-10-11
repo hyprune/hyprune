@@ -41,7 +41,11 @@ add() { # add ok|note|fail ID "Label" "detail" ["fix command"]
 have() { command -v "$1" >/dev/null 2>&1; }
 # Version comparison: version_ge 3.12.1 3.11
 version_ge() { [[ $(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1) == "$2" ]]; }
-manifest_get() { sed -n "s/^ *\"$1\": *\"\{0,1\}\([^\",]*\)\"\{0,1\},\{0,1\}$/\1/p" <<<"$MANIFEST_TEXT" | head -1; }
+# One "key": value per line in the manifest; plain bash, no sed/awk needed.
+manifest_get() {
+    local line re="^ *\"$1\": *\"?([^\",]*)\"?,?$"
+    while IFS= read -r line; do [[ $line =~ $re ]] && { echo "${BASH_REMATCH[1]}"; return; }; done <<<"$MANIFEST_TEXT"
+}
 
 # Copy-paste install commands for this distribution, from generic names.
 pkg_name() {
@@ -68,7 +72,8 @@ install_cmd() {
         debian) echo "sudo apt install ${names[*]}" ;;
         opensuse) echo "sudo zypper install ${names[*]}" ;;
         nixos) echo "nix-shell -p ${names[*]}" ;;
-        *) echo "install with your package manager: ${names[*]}" ;;
+        *) if have nix; then echo "nix profile install ${names[*]/#/nixpkgs#}"
+           else echo "install with your package manager: ${names[*]}"; fi ;;
     esac
 }
 nix_fix() {
@@ -233,7 +238,9 @@ check_gpu() {
         renderer=${line#*|}
     fi
     es=${es#OpenGL ES }
-    if [[ -z $es ]]; then
+    if [[ -z $es ]] && have eglinfo; then
+        add note egl "EGL / GLES" "eglinfo finds no OpenGL ES device: check your GPU driver"
+    elif [[ -z $es ]]; then
         add note egl "EGL / GLES" "could not query (install eglinfo to check)" "$(install_cmd eglinfo)"
     elif ! version_ge "$es" 3.0; then
         add fail egl "EGL / GLES" "OpenGL ES $es; Hyprune needs 3.0 or newer"
@@ -292,16 +299,18 @@ check_tools() {
 }
 
 check_resources() {
-    local need path free ram supply on_battery=0
+    local need path free ram key supply on_battery=0
     need=$(manifest_get diskMiB)
     [[ $CORE == source ]] && need=$(manifest_get diskSourceMiB)
     need=${need:-1000}
     path=$DIR
     while [[ ! -d $path ]]; do path=$(dirname "$path"); done
-    free=$(($(df -Pk "$path" | awk 'NR==2 {print $4}') / 1024))
+    read -r _ _ _ free _ < <(df -Pk "$path" | tail -1)
+    free=$((free / 1024))
     if ((free < need)); then add fail disk "Disk space" "$free MiB free in $path; need $need MiB" "free some space, or pass --dir on a larger disk"
     else add ok disk "Disk space" "$free MiB free in $path (need $need MiB)"; fi
-    ram=$(($(awk '/^MemTotal:/ {print $2}' /proc/meminfo) / 1024))
+    while read -r key ram _; do [[ $key == MemTotal: ]] && break; done </proc/meminfo
+    ram=$((ram / 1024))
     if ((ram < 4096)); then add fail ram "Memory" "$ram MiB; Hyprune needs 4 GiB or more"
     elif ((ram < 8192)); then add note ram "Memory" "$ram MiB: close heavy apps first"
     else add ok ram "Memory" "$ram MiB"; fi
