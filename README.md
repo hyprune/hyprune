@@ -35,6 +35,36 @@ docks and no areas, so dev maps it as an explicit destination on workspace 30
 on hardware and output resolution; Minimal has no measured iGPU frame-rate
 guarantee yet.
 
+## Try it in 5 minutes
+
+No install, no log out, no config edits and no sudo: everything goes into one
+folder, and Hyprune opens in a window inside the desktop you are using.
+
+```sh
+curl -fsSL https://hyprune.com/check | bash   # read-only compatibility report
+curl -fsSL https://hyprune.com/try | bash     # download into ~/hyprune-try and open it
+```
+
+`check` reports the session, Hyprland against the plugin ABI, GPU/GLES,
+Quickshell, Python, Nix, disk and memory, with a verdict and the exact fix
+command for your distribution. `try` runs the same checks and stops (printing
+the commands) if anything is missing; it never runs a package manager. Then it
+downloads core for the pinned Hyprland ABI (or builds it inside the folder until
+a prebuilt release matches), the shell with a private venv, and Lumen Reach,
+verifying every SHA-256, and opens a nested Hyprland window at Sun Court. Inside
+the window Super chords also work with Alt; quit with Alt+Shift+Q.
+
+```sh
+curl -fsSL https://hyprune.com/try | bash -s -- --dir ~/hyprune-try --dry-run   # also --live, --world, --no-run, --ref
+~/hyprune-try/run          # the window again; --live loads into your running Hyprland, --stop undoes it
+~/hyprune-try/uninstall    # deletes the folder; nothing else to undo
+```
+
+The prebuilt core matches Arch Linux's Hyprland 0.56.2. Elsewhere, or with
+another Hyprland build, `nix run github:hyprune/hyprune#try` brings the pinned
+compositor. Sources: [try/](try/); pinned, hash-checked copies and the full
+walkthrough: [hyprune.com/try-it](https://hyprune.com/try-it/).
+
 ## Install
 
 Everything installs from public repositories and release archives; no GitHub token
