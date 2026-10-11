@@ -47,7 +47,12 @@ case ${1:-} in
         ((${#base} <= 20)) || base=/tmp
         runtime=$(mktemp -d "$base/ht.XXXX")
         trap 'cp "$runtime"/hypr/*/hyprland.log "$DIR/state/hyprland.log" 2>/dev/null; rm -rf "$runtime"' EXIT
-        XDG_RUNTIME_DIR=$runtime "$PY" "$DIR/meta/runtime/session.py" --window --enter ;;
+        log=$DIR/state/session.log
+        echo "  (logs: $log)"
+        code=0
+        XDG_RUNTIME_DIR=$runtime "$PY" "$DIR/meta/runtime/session.py" --window --enter >"$log" 2>&1 || code=$?
+        if ((code)); then tail -5 "$log"; echo "run: the session ended with code $code; full log: $log" >&2; fi
+        exit "$code" ;;
     --live)
         [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || { echo "run --live: start it from a terminal inside Hyprland" >&2; exit 1; }
         cat <<EOF
