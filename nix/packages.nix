@@ -111,7 +111,7 @@ let
     nativeBuildInputs = [ pkgs.makeWrapper ]; dontBuild = true;
     installPhase = ''
       mkdir -p $out/share/hyprune $out/bin
-      cp -r runtime kits worlds $out/share/hyprune/
+      cp -r runtime kits worlds try $out/share/hyprune/
       cp LICENSE $out/share/hyprune/
       # App icons (H / optical / full room by size) and the brand licence note.
       ${python}/bin/python3 runtime/icons.py $out/share/icons
@@ -128,8 +128,48 @@ let
     '';
     meta = { license = lib.licenses.mit; mainProgram = "hyprune-session"; };
   };
+  # `nix run github:hyprune/hyprune#try`: the try folder's nested window, with the
+  # pinned Hyprland that core was built against, so the plugin ABI always matches.
+  # Config, state and caches live in one folder (default ~/hyprune-try-nix).
+  try = pkgs.writeShellApplication {
+    name = "hyprune-try";
+    runtimeInputs = [ python hyprland shell pkgs.kitty pkgs.btop pkgs.coreutils ];
+    text = ''
+      dir=''${HYPRUNE_TRY_DIR:-$HOME/hyprune-try-nix}
+      while (($#)); do
+        case $1 in
+          --dir) dir=$2; shift ;;
+          --size) export HYPRUNE_TRY_SIZE=$2; shift ;;
+          *) echo "usage: hyprune-try [--dir DIR] [--size WxH]   (uninstall: rm -rf DIR)"; exit 0 ;;
+        esac
+        shift
+      done
+      [[ -n ''${WAYLAND_DISPLAY:-} ]] || { echo "hyprune-try: needs a Wayland session" >&2; exit 1; }
+      mkdir -p "$dir"/{config,state,cache,data/hyprune/worlds}
+      world=${releaseWorld "lumen-reach"}/share/hyprune/worlds/${releases.lumen-reach.id}
+      # Core refuses symlinked world packages: copy it out of the store once.
+      [[ -d $dir/data/hyprune/worlds/${releases.lumen-reach.id} ]] ||
+        cp -r --no-preserve=mode "$world" "$dir/data/hyprune/worlds/"
+      export XDG_CONFIG_HOME=$dir/config XDG_STATE_HOME=$dir/state XDG_DATA_HOME=$dir/data XDG_CACHE_HOME=$dir/cache
+      python3 ${starter}/share/hyprune/try/prepare.py --folder "$dir" --kit ${starter}/share/hyprune/kits/lumen-reach/kit.toml \
+        --plugin ${core}/lib/hyprune-core.so --input-default ${core}/share/hyprune/input.default.json
+      # Outside NixOS there is no /run/opengl-driver: use this Mesa (Intel, AMD, nouveau).
+      if [[ ! -e /run/opengl-driver ]]; then
+        export __EGL_VENDOR_LIBRARY_FILENAMES=${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json \
+          LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri GBM_BACKENDS_PATH=${pkgs.mesa}/lib/gbm
+      fi
+      [[ $WAYLAND_DISPLAY == /* ]] || export WAYLAND_DISPLAY=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY
+      base=$XDG_RUNTIME_DIR
+      ((''${#base} <= 20)) || base=/tmp
+      runtime=$(mktemp -d "$base/ht.XXXX")
+      trap 'rm -rf "$runtime"' EXIT
+      echo "Hyprune (Nix): a nested window; your session is untouched. Quit: Alt+Shift+Q or Ctrl+C."
+      XDG_RUNTIME_DIR=$runtime python3 ${starter}/share/hyprune/runtime/session.py --window --enter \
+        --hyprland ${hyprland}/bin/Hyprland
+    '';
+  };
 in lib.mapAttrs' (name: _: lib.nameValuePair "world-${name}" (releaseWorld name)) releases // {
-  inherit core shell sdk starter world-minimal hyprland;
+  inherit core shell sdk starter world-minimal hyprland try;
   default = pkgs.symlinkJoin {
     name = "hyprune-minimal";
     paths = [ core shell sdk starter world-minimal pkgs.kitty pkgs.btop ];

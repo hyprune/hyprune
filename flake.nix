@@ -50,7 +50,7 @@
           cp -r ${self} source; chmod -R u+w source; cd source
           export PYTHONDONTWRITEBYTECODE=1
           python3 -m unittest discover -s tests -v
-          shellcheck install.sh scripts/*.sh
+          shellcheck install.sh scripts/*.sh try/*.sh
           touch $out
         '';
         modules = import ./nix/module-checks.nix { inherit self inputs pkgs; };
