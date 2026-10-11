@@ -4,8 +4,8 @@
     "version": "0.10.0",
     "formatVersion": "0.8",
     "url": "https://github.com/hyprune/worlds/releases/download/lumen-reach-v0.10.0/com.hyprune.lumen-reach-0.10.0.tar.zst",
-    "sha256": "ff50c5fbb8f45eb35e8d0de4116f43185799dac941450553eeaa3f009ba4fd50",
-    "nixHash": "sha256-/1DF+7j0XrNejQ3kEW9DGFeZ2slBRQVT7qo/AJuk/VA=",
+    "sha256": "13753fc0718fc27099d808cc87a283caf21a485707afd712af5e3a4ce8750a9a",
+    "nixHash": "sha256-E3U/wHGPwnCZ2AjMh6KDyvIaSFcHr9cSr146TOh1Cpo=",
     "published": false
   },
   "switchyard": {
