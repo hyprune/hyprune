@@ -36,6 +36,7 @@ class ManifestTests(unittest.TestCase):
         pins = json.loads((ROOT / 'component-pins.json').read_text())
         self.assertEqual(MANIFEST['shellRev'], pins['shell']['rev'])
         self.assertIn(MANIFEST['shellRev'], MANIFEST['shellUrl'])
+        self.assertEqual(MANIFEST['coreRev'], pins['core']['rev'])
         self.assertIn(MANIFEST['coreRev'], MANIFEST['coreSourceUrl'])
         for key in ['shellSha256', 'coreSourceSha256']:
             self.assertRegex(MANIFEST[key], HEX)
