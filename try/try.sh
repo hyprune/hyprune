@@ -6,7 +6,7 @@
 #    the install commands and stops: it never runs a package manager or sudo.
 # 2. Downloads into ONE folder (default ~/hyprune-try), checking every sha256:
 #    core built for your Hyprland (or builds it there from source), the shell
-#    with a private Python venv, and the world release.
+#    with a private Python venv (hash-pinned packages), and the world release.
 # 3. Writes DIR/run and DIR/uninstall. Config, state and caches stay in DIR:
 #    no login items, session entries, config edits or files elsewhere.
 # 4. Starts DIR/run: a nested Hyprland window inside your current session.
@@ -64,7 +64,7 @@ main() {
     echo "  folder  $dir (everything goes here; ./uninstall deletes it)"
     if [[ $CORE == prebuilt ]]; then echo "  core    prebuilt $(manifest_get coreVersion) for Hyprland $(manifest_get hyprland)"
     else echo "  core    hyprune/core@$(manifest_get coreRev | cut -c1-7), built from source here (5-15 minutes)"; fi
-    echo "  shell   hyprune/shell@$(manifest_get shellRev | cut -c1-7) and a private Python venv (jsonschema from PyPI)"
+    echo "  shell   hyprune/shell@$(manifest_get shellRev | cut -c1-7) and a private Python venv (hash-pinned packages from PyPI)"
     echo "  world   $wid $wversion"
     if ((live)); then echo "  then    $dir/run --live (asks first)"; else echo "  then    $dir/run: a nested Hyprland window"; fi
     if ((dry)); then echo; echo "Dry run: nothing was downloaded or written."; return; fi
@@ -143,7 +143,7 @@ get_shell() {
     mkdir "$dir/shell"
     tar -C "$dir/shell" --strip-components=1 -xzf "$dir/downloads/shell.tar.gz"
     python3 -m venv "$dir/venv"
-    "$dir/venv/bin/pip" install --quiet --no-cache-dir --disable-pip-version-check -r "$dir/shell/requirements.txt"
+    "$dir/venv/bin/pip" install --quiet --no-cache-dir --disable-pip-version-check --require-hashes -r "$dir/shell/requirements.txt"
     printf '#!/bin/sh\nexec "%s/venv/bin/python" "%s/shell/bridge/launch.py" "$@"\n' "$dir" "$dir" >"$dir/bin/hyprune-shell"
     chmod 755 "$dir/bin/hyprune-shell"
 }

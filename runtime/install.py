@@ -318,7 +318,7 @@ def main():
                 shutil.copy2(core / 'build' / name, generation / 'bin' / name)
             shutil.copy2(core / 'build/hyprune-core.so', generation / 'lib/hyprune-core.so')
             run(sys.executable, '-m', 'venv', generation / 'venv')
-            run(generation / 'venv/bin/pip', 'install', '-r', generation / 'shell/requirements.txt')
+            run(generation / 'venv/bin/pip', 'install', '--require-hashes', '-r', generation / 'shell/requirements.txt')
             run('npm', 'ci', '--ignore-scripts', cwd=generation / 'sdk')
             run('npm', 'run', 'build', cwd=generation / 'sdk')
             (generation / 'complete').touch()

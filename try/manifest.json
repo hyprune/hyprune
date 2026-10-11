@@ -1,6 +1,6 @@
 {
   "manifest": 1,
-  "tryVersion": "0.1.0",
+  "tryVersion": "0.1.1",
   "hyprland": "0.56.2",
   "hyprlandAbi": "efb50993780079460b0cbed1363e2166a2de1d9f_aq_0.15_hu_0.14_hg_0.5_hc_0.1_hlg_0.6",
   "hyprlandArchPackage": "hyprland-0.56.2-4",
@@ -12,9 +12,9 @@
   "corePrebuiltSha256": "",
   "coreSourceUrl": "https://github.com/hyprune/core/archive/2341aeef7d02dacd7c5f38e17d3562fe23502b66.tar.gz",
   "coreSourceSha256": "98c2894a4a50da78a0401ada2f363a5e3958e7520a26da0b92be831b3b149a17",
-  "shellRev": "d8f96f8a9f43c8cc9397a5b032b4c083e8afecfa",
-  "shellUrl": "https://github.com/hyprune/shell/archive/d8f96f8a9f43c8cc9397a5b032b4c083e8afecfa.tar.gz",
-  "shellSha256": "04a1b752369f66ad8bb452ebc0d6ba28f0ca60ee0bb48bb6420e8e1d420f4adc",
+  "shellRev": "1b0ba2b47c0a66f97d2aa85007ab2078f4f9b026",
+  "shellUrl": "https://github.com/hyprune/shell/archive/1b0ba2b47c0a66f97d2aa85007ab2078f4f9b026.tar.gz",
+  "shellSha256": "e27ccd7a23f27167db8b77358e9a012a52cc240218cdd47445b23414a00eecbc",
   "world": "lumen-reach",
   "diskMiB": 600,
   "diskSourceMiB": 2500

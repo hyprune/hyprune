@@ -510,11 +510,11 @@
     "shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1791733820,
-        "narHash": "sha256-LidiG6XTid2YWbY0IJpjrW5tLVvVyahwkJoSqNWfW6w=",
+        "lastModified": 1791758897,
+        "narHash": "sha256-XywHEy4fpHxyPNVpds4InDRFM2Sp1BuMmcXdlzmQQHs=",
         "owner": "hyprune",
         "repo": "shell",
-        "rev": "d8f96f8a9f43c8cc9397a5b032b4c083e8afecfa",
+        "rev": "1b0ba2b47c0a66f97d2aa85007ab2078f4f9b026",
         "type": "github"
       },
       "original": {
