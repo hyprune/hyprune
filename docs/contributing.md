@@ -118,8 +118,8 @@ These validate installer planning, preservation/backup prompts, safe archive
 extraction and credential/session lifecycle through fixtures. They do not prove
 that today's rolling Arch packages match the pinned compositor. Full script
 build/run acceptance needs an isolated Arch environment with 0.56.2 plus matching
-generated headers and a GPU/display. Never test by loading into an owner's
-desktop. For real component acceptance use core's verified nested harness under
+generated headers and a GPU/display. Never test by loading the plugin into your
+own desktop session. For real component acceptance use core's verified nested harness under
 `flock /tmp/worldshell-nested.lock`; don't bypass it with bare `hyprctl`.
 
 ## CI and changes
@@ -135,9 +135,15 @@ checks `published` before fetching showcase archives.
 
 Update component commit pins and SDK's `npmDepsHash` together with relevant
 contract checks. Keep build-path adjustments in `nix/packages.nix` and the
-script's private source copy until core gains an install target. Commit messages
-must end with:
+script's private source copy until core gains an install target.
 
-```text
-Co-Authored-By: Krombopulos Michael <Krombopulos.Michael@mail99.me>
-```
+## Pull requests
+
+Fork the repository, work on a topic branch and open a pull request against
+`main`. Keep commits small and logical; say what changed, why, and how you tested
+it (unit tests, `nix flake check`, installer dry runs, any real session) and what
+you could not test. Component changes belong in their own repositories
+([hyprune.com/contributing](https://hyprune.com/contributing/) explains the
+boundaries); a pin bump here then references their merged commits. There is no
+CLA; contributions use this repository's MIT licence. Add a `Co-Authored-By:`
+trailer only for people who actually co-wrote the change and agreed to it.

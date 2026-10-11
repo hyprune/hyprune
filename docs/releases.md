@@ -1,4 +1,4 @@
-# Owner release decisions
+# Release checklist (maintainers)
 
 1. Publish the recorded core/shell/sdk/schema/docs/worlds commits, then make the
    repositories public or document private access. No work in this repo is pushed

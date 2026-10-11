@@ -159,4 +159,4 @@ contributors, CC-BY-4.0, resized without retouching;
 contributors, CC-BY-4.0; usage rules and exports in [brand/](brand/README.md). No prototype/game assets are used.
 
 [Contributor builds and Docker testing](docs/contributing.md) ·
-[Verification report](docs/verification.md) · [Owner release checklist](docs/releases.md)
+[Verification report](docs/verification.md) · [Release checklist](docs/releases.md)
