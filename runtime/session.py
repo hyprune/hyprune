@@ -200,6 +200,10 @@ def run(args, extra):
         # A committed load also proves the complete method profile is advertised
         # before the shell consumes its own launch token.
         bootstrap_world(local['HYPRUNE_SOCKET'], bootstrap_token, location)
+        if args.enter:
+            # Our own verified child only; the world is loaded, so this never falls back to the atrium.
+            subprocess.run(['hyprctl', '-i', local['HYPRLAND_INSTANCE_SIGNATURE'], 'eval', 'hl.plugin.hyprune.toggle()'],
+                           env=child_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
         token_fd = pipe_payload((token + '\n').encode())
         try:
             children.append(subprocess.Popen(config['shell'], env={**child_env, 'HYPRUNE_TOKEN_FD': str(token_fd)}, pass_fds=(token_fd,)))
@@ -229,10 +233,14 @@ def main():
     parser.add_argument('--hyprland', default='Hyprland')
     parser.add_argument('-c', '--config')
     parser.add_argument('--nested', action='store_true')
+    parser.add_argument('--window', action='store_true',
+                        help='Nested window in the current Wayland session, without the developer test lock')
+    parser.add_argument('--enter', action='store_true', help='Enter the world as soon as the start world is loaded')
     parser.add_argument('--prefer-user-config', action='store_true', help='Use the Home Manager generated Lua config')
     args, extra = parser.parse_known_args()
+    window, args.nested = args.window, args.nested or args.window
     try:
-        if args.nested:
+        if args.nested and not window:
             with open('/tmp/worldshell-nested.lock', 'a') as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 return run(args, extra)
