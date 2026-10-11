@@ -14,8 +14,9 @@ jobs:
   nix:
     runs-on: ubuntu-latest
     env:
-      # Read-only fine-grained PAT with access to all private component repos.
-      # Public repos work without this secret. Never put a token in flake.lock.
+      # Component inputs are public; github.token only avoids API rate limits.
+      # A private fork pinning private forks can set HYPRUNE_READ_TOKEN (read-only).
+      # Never put a token in flake.lock.
       NIX_CONFIG: "access-tokens = github.com=${{ secrets.HYPRUNE_READ_TOKEN || github.token }}"
     steps:
       - uses: actions/checkout@v4

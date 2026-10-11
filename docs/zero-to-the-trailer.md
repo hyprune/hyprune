@@ -11,8 +11,8 @@ with original architecture, baked lighting, and live applications on tool mounts
 
 This guide uses Hyprland **0.56.2**, IPC **0.19** (core and shell), and the
 `lumen-reach` kit with the published **Lumen Reach 0.9.2** release (pinned by URL and
-hash in `worlds/releases.json`). These are early preview builds, and the component
-repositories are private. The
+hash in `worlds/releases.json`). These are early preview builds, built from the public
+[hyprune repositories](https://github.com/hyprune). The
 [Minimal kit](https://github.com/hyprune/hyprune#install) can be installed without a world download;
 its room has a workspace wall and two tool mounts, with the same controls.
 

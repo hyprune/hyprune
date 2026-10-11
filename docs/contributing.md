@@ -30,9 +30,10 @@ Heavy builds (core, Hyprland, Glaze, every check) are best run on a separate
 build host rather than a laptop. `scripts/nix-remote.sh` stages clean `git archive` snapshots of each
 component at its `flake.lock` revision plus this working tree, then runs the same
 `nixos/nix` container over SSH on `HYPRUNE_BUILD_HOST` (required; see Developer settings). No
-GitHub token leaves your machine. The release archives are private, so download
-them first (`gh release download`) and point `HYPRUNE_RELEASE_DIR` at them; they
-are seeded as fixed outputs:
+GitHub token leaves your machine. Release archives download from public GitHub
+releases; to avoid fetching them again on the build host (or to work offline),
+download them first (`gh release download`) and point `HYPRUNE_RELEASE_DIR` at
+them, and they are seeded as fixed outputs:
 
 ```sh
 HYPRUNE_RELEASE_DIR=/tmp/releases ./scripts/nix-remote.sh flake check --keep-going --print-build-logs
@@ -125,11 +126,11 @@ own desktop session. For real component acceptance use core's verified nested ha
 ## CI and changes
 
 GitHub Actions uses `cachix/install-nix-action`, runs flake check and the explicit
-builds, and tests Arch dry runs. While components are private, set
-`HYPRUNE_READ_TOKEN` to a read-only fine-grained token authorized for their repos.
-The standard `GITHUB_TOKEN` alone cannot read sibling private repos. Fork PRs
-cannot use the secret; their private-input jobs will fail until public access or
-a reviewed private-checkout workflow is arranged. No `pull_request_target` code
+builds, and tests Arch dry runs. All component inputs are public, so CI needs no
+secret; the job passes the standard `GITHUB_TOKEN` to Nix only to avoid GitHub API
+rate limits, and fork PRs run the same jobs. A private fork that pins private
+component forks can set `HYPRUNE_READ_TOKEN` to a read-only fine-grained token for
+them; CI uses it in place of `GITHUB_TOKEN` when present. No `pull_request_target` code
 execution or deployment is configured. The optional manual release-world job
 checks `published` before fetching showcase archives.
 

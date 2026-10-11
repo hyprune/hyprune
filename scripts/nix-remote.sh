@@ -2,8 +2,8 @@
 # Heavy Nix builds/checks on a remote build host over SSH, in the same
 # nixos/nix container as scripts/nix-docker.sh. Components are clean
 # `git archive` snapshots at the flake.lock revisions (no GitHub token leaves
-# this machine). HYPRUNE_RELEASE_DIR may hold release tarballs to seed as fixed
-# outputs, since the private release assets need credentials to download.
+# this machine). HYPRUNE_RELEASE_DIR may hold already-downloaded release tarballs
+# to seed as fixed outputs, so the build host needn't fetch them again.
 # Usage: scripts/nix-remote.sh build .#core   (default: flake check)
 set -euo pipefail
 SCRIPT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)

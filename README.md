@@ -11,8 +11,9 @@ worlds and starter kits. Start in our vision, then change every part of it.
 ![A live terminal on a Sun Court desk in Lumen Reach](docs/images/sun-court.jpg)
 
 Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
-**0.19**; the shell negotiates its newest supported protocol with core. Component
-repositories are currently private. Minimal is self-contained. **Lumen Reach 0.9.2**
+**0.19**; the shell negotiates its newest supported protocol with core. Every
+component is public on [GitHub](https://github.com/hyprune) under MIT (worlds:
+CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.9.2**
 (world format 0.7) and **Switchyard 0.1.2** are published releases, pinned by URL
 and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
 that use them. Dedicated DRM/hardware-cursor acceptance still needs a supervised
@@ -36,9 +37,9 @@ guarantee yet.
 
 ## Install
 
-Access to the private component repositories is required until they become public.
-Use a read-only GitHub token through Nix's `access-tokens` configuration, or the
-[local Docker overrides](docs/contributing.md). No token belongs in the lockfile.
+Everything installs from public repositories and release archives; no GitHub token
+is needed. To build against local checkouts instead, see the
+[Docker and Nix overrides](docs/contributing.md).
 
 **Nix profile / other Linux distributions:**
 
