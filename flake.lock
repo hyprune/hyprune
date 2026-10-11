@@ -541,11 +541,11 @@
     "worlds": {
       "flake": false,
       "locked": {
-        "lastModified": 1791711169,
-        "narHash": "sha256-vRNcxlYdBSOcFuzWZviIvowP7DuWTgGz4rvknhmoy/g=",
+        "lastModified": 1791714985,
+        "narHash": "sha256-NUlPy5gSCWNJbCgF+TmWRqqw5nUy2n0Z6tOkI4tPQKE=",
         "owner": "hyprune",
         "repo": "worlds",
-        "rev": "e5ca75462dde87fd8ea56ae5b2e4526da6f5647b",
+        "rev": "3037c91dcd637e7cd42a7f29104967fc55aba926",
         "type": "github"
       },
       "original": {

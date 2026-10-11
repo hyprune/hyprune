@@ -3,6 +3,15 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-11: worlds 3037c91; Lumen Reach 0.9.2
+
+Lumen Reach 0.9.2 has 0.9.1's content, rebuilt so no shipped PNG carries
+build-machine path metadata. Its budgets delta against 0.9.1 is 0; perf gate,
+screens and routes pass (worlds `lumen-reach/reports/release.json`).
+`worlds/releases.json` and the docs point to it; the worlds pin moves to the
+release commit. On the build host (release archives seeded): `nix flake check`
+passed, including the world-format check.
+
 ## 2026-10-11: core 86a71db, shell 163d6cf, worlds e5ca754; Switchyard 0.1.2
 
 Go-public pins: core and shell docs without owner/agent journals, core
