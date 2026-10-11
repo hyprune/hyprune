@@ -228,12 +228,16 @@ check_gpu() {
     else
         add ok gpu "GPU" "${names[0]}"
     fi
+    # GL drivers keep shader caches under ~/.cache; switch them off so the probe writes nothing.
+    local nocache=(env MESA_SHADER_CACHE_DISABLE=true MESA_GLSL_CACHE_DISABLE=true __GL_SHADER_DISK_CACHE=0)
     if have eglinfo; then
-        line=$(eglinfo -B 2>/dev/null | grep -m1 'OpenGL ES profile version')
+        local egl
+        egl=$("${nocache[@]}" eglinfo -B 2>/dev/null)
+        line=$(grep -m1 'OpenGL ES profile version' <<<"$egl")
         es=$(grep -o 'OpenGL ES [0-9.]*' <<<"$line" | head -1)
-        renderer=$(eglinfo -B 2>/dev/null | grep -m1 'OpenGL ES profile renderer' | sed 's/.*renderer: *//')
+        renderer=$(grep -m1 'OpenGL ES profile renderer' <<<"$egl" | sed 's/.*renderer: *//')
     elif have python3; then
-        line=$(python3 -I -c "$GL_PROBE" 2>/dev/null)
+        line=$("${nocache[@]}" python3 -I -c "$GL_PROBE" 2>/dev/null)
         es=$(grep -o 'OpenGL ES [0-9.]*' <<<"$line" | head -1)
         renderer=${line#*|}
     fi
