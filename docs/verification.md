@@ -3,6 +3,17 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-11: core 86a71db, shell 163d6cf, worlds e5ca754; Switchyard 0.1.2
+
+Go-public pins: core and shell docs without owner/agent journals, core
+`dev/live` with a configurable plugin/HUD swap, the shell's HUD concept with a
+neutral name (a legacy alias keeps saved preferences working), and worlds after
+its history rewrite (the previous pin `be1be28` no longer exists). Switchyard
+0.1.2 replaces 0.1.1 in `worlds/releases.json`. On the build host
+(`scripts/nix-remote.sh`, release archives seeded with `HYPRUNE_RELEASE_DIR`
+while worlds is private): `nix flake check` passed: core CTest 29/29, shell 150
+tests.
+
 ## 2026-10-11: core 763a723, shell f1d65e1, sdk deb6158, schema 10fce4e, docs 53f9eae (public-prep)
 
 The public-prep merges: canonical licences, no private paths or hosts in any

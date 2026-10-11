@@ -1,15 +1,15 @@
 {
   "core": {
-    "rev": "763a72310f0bab1f07fffaf266e41b66e47e889c"
+    "rev": "86a71db15207c13dc371b4f63ae34a9062b99b58"
   },
   "shell": {
-    "rev": "f1d65e1255f698235ecda3159f7c993db96977c7"
+    "rev": "163d6cfead51c107f8e68d23ebc3cc3086bee920"
   },
   "sdk": {
     "rev": "deb6158792398ea4dec226ccd4482dfdfc02d87e"
   },
   "worlds": {
-    "rev": "be1be28993602a204a6297801134564e3896e42c"
+    "rev": "e5ca75462dde87fd8ea56ae5b2e4526da6f5647b"
   },
   "schema": {
     "rev": "10fce4e12b3b24e50f42bf55d04683209fd631c1"
