@@ -1,0 +1,21 @@
+{
+  "manifest": 1,
+  "tryVersion": "0.1.0",
+  "hyprland": "0.56.2",
+  "hyprlandAbi": "efb50993780079460b0cbed1363e2166a2de1d9f_aq_0.15_hu_0.14_hg_0.5_hc_0.1_hlg_0.6",
+  "hyprlandArchPackage": "hyprland-0.56.2-4",
+  "python": "3.11",
+  "quickshell": "0.3.2",
+  "coreRev": "f3bf0e8936f9e68985b421b5a3f9e9692f23e33a",
+  "coreVersion": "",
+  "corePrebuiltUrl": "",
+  "corePrebuiltSha256": "",
+  "coreSourceUrl": "https://github.com/hyprune/core/archive/f3bf0e8936f9e68985b421b5a3f9e9692f23e33a.tar.gz",
+  "coreSourceSha256": "61c8b78d2fd55dc8037647fc4e73d27f8e57f4f71482c7a1ce2183481983ca50",
+  "shellRev": "d8f96f8a9f43c8cc9397a5b032b4c083e8afecfa",
+  "shellUrl": "https://github.com/hyprune/shell/archive/d8f96f8a9f43c8cc9397a5b032b4c083e8afecfa.tar.gz",
+  "shellSha256": "04a1b752369f66ad8bb452ebc0d6ba28f0ca60ee0bb48bb6420e8e1d420f4adc",
+  "world": "lumen-reach",
+  "diskMiB": 600,
+  "diskSourceMiB": 2500
+}
