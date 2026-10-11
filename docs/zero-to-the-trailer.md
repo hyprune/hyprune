@@ -9,9 +9,10 @@ with original architecture, baked lighting, and live applications on tool mounts
 
 ![Live terminal at Sun Court](images/sun-court.jpg)
 
-This guide uses Hyprland **0.56.2**, core M3B, shell **IPC 0.6**, and the
-`lumen-reach` kit. These are early preview builds. Lumen Reach's GitHub Release
-URL/hash are still TODO, and the component repositories are private. The
+This guide uses Hyprland **0.56.2**, IPC **0.19** (core and shell), and the
+`lumen-reach` kit with the published **Lumen Reach 0.9.1** release (pinned by URL and
+hash in `worlds/releases.json`). These are early preview builds, and the component
+repositories are private. The
 [Minimal kit](https://github.com/hyprune/hyprune#install) can be installed without a world download;
 its room has a workspace wall and two tool mounts, with the same controls.
 
@@ -27,25 +28,24 @@ programs.hyprune = {
 };
 ```
 
-Once the world release is published, rebuild and select the Hyprune login session
-(NixOS), or start the Home Manager `Hyprland` wrapper from a TTY. Until publication,
-use `kit = "minimal"`; selecting the showcase deliberately attempts the TODO
-release fetch and fails instead of substituting a different world.
+Rebuild and select the Hyprune login session (NixOS), or start the Home Manager
+`Hyprland` wrapper from a TTY. The kit fetches the pinned release; a hash mismatch
+fails instead of substituting a different world.
 
-On Arch, once the release is published:
+On Arch:
 
 ```sh
 ./install.sh --kit lumen-reach --dry-run
 ./install.sh --kit lumen-reach
 ```
 
-For owner testing before publication, the existing archive can be supplied with
-its independently verified checksum. This doesn't relax hash checking:
+Offline, an archive you already downloaded can be supplied with its independently
+verified checksum. This doesn't relax hash checking:
 
 ```sh
-sha256sum /path/to/com.hyprune.lumen-reach-0.4.0.tar.zst
+sha256sum /path/to/com.hyprune.lumen-reach-0.9.1.tar.zst
 ./install.sh --kit lumen-reach --source-root /path/to/hyprune \
-  --world-package lumen-reach=/path/to/com.hyprune.lumen-reach-0.4.0.tar.zst \
+  --world-package lumen-reach=/path/to/com.hyprune.lumen-reach-0.9.1.tar.zst \
   --world-sha256 lumen-reach=REPLACE_WITH_VERIFIED_64_HEX_SHA256
 ```
 

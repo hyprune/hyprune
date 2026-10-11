@@ -10,18 +10,19 @@ worlds and starter kits. Start in our vision, then change every part of it.
 
 ![A live terminal on a Sun Court desk in Lumen Reach](docs/images/sun-court.jpg)
 
-Early preview, targeting **Hyprland 0.56.2** and shell IPC **0.6**. Component
-repositories are currently private. Minimal is self-contained; **Lumen Reach and
-Switchyard downloads await owner-published releases**. The URLs and hashes in
-[worlds/releases.json](worlds/releases.json) are explicitly TODO, not working
-download links. Dedicated DRM/hardware-cursor acceptance still needs the core
-owner's supervised checklist; container tests cannot verify it.
+Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
+**0.19**; the shell negotiates its newest supported protocol with core. Component
+repositories are currently private. Minimal is self-contained. **Lumen Reach 0.9.1**
+(world format 0.7) and **Switchyard 0.1.1** are published releases, pinned by URL
+and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
+that use them. Dedicated DRM/hardware-cursor acceptance still needs a supervised
+hardware checklist; container tests cannot verify it.
 
 | Kit | First experience | Graphics | Distribution |
 | --- | --- | --- | --- |
-| `lumen-reach` | Sun Court, Array Hall, Rime Vault, Signal Rise; desk terminals and btop kiosk | High; switch to `intel` for a lighter tier | Release tarball TODO |
+| `lumen-reach` | Sun Court, Array Hall, Rime Vault, Signal Rise; desk terminals and btop kiosk | High; switch to `intel` for a lighter tier | Lumen Reach 0.9.1 release |
 | `minimal` | One quiet home, terminal, workspace wall and spare lectern; 12 triangles, no textures | Intel tier, bloom off, reduced motion | Included, original CC0 |
-| `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard release TODO |
+| `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard 0.1.1 release |
 
 All kits use core's M3B keymap and the shell's built-in dark theme. The loaded
 world defines where workspaces are: the world itself runs on room workspace 20,
@@ -49,7 +50,7 @@ hyprune-session
 ```
 
 `default` is the Minimal bundle; `kit-lumen-reach` and `kit-dev` also fetch the
-corresponding release worlds. After publication, configure those kits with
+corresponding release worlds. Outside the Nix profile, configure those kits with
 `hyprune-setup install --kit /path/to/kits/<kit>/kit.toml --world-dir /path/to/world-package/share/hyprune/worlds`.
 For a new kit, first move the existing starter config and layout aside as described
 in [kit authoring](docs/kits.md). Nix modules supply these paths automatically.
@@ -60,7 +61,7 @@ in [kit authoring](docs/kits.md). Nix modules supply these paths automatically.
 imports = [ inputs.hyprune.nixosModules.default ];
 programs.hyprune = {
   enable = true;
-  kit = "minimal"; # "lumen-reach" after release publication
+  kit = "minimal"; # or "lumen-reach", "dev"
   worlds = [];    # additional "lumen-reach", "switchyard", "minimal"
   settings.graphics = { quality = "intel"; reduced_motion = true; };
 };
@@ -118,8 +119,8 @@ packaging path there.
 
 ## Zero to the trailer
 
-Choose `lumen-reach` after its release is published. Before then, an owner with
-the existing release archive can use the [local archive path](docs/zero-to-the-trailer.md).
+Choose `lumen-reach`. With a release archive you already downloaded, the
+[local archive path](docs/zero-to-the-trailer.md) works offline.
 
 1. Install the kit and start its Hyprune session. Press **Super+F12** to enter
    the world. **F12** always returns to the desktop.

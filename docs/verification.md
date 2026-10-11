@@ -3,6 +3,18 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-11: core 763a723, shell f1d65e1, sdk deb6158, schema 10fce4e, docs 53f9eae (public-prep)
+
+The public-prep merges: canonical licences, no private paths or hosts in any
+repository. Developer settings (gallery, video, build and bake hosts) come from
+the environment or `~/.config/hyprune/dev.env`. The shell now negotiates its
+newest protocol (IPC 0.19) on every install path, not 0.6 (Arch) or 0.16 (Nix).
+README and the zero-to-the-trailer guide describe IPC 0.19 and the published
+Lumen Reach 0.9.1 and Switchyard 0.1.1 releases. On the build host
+(`scripts/nix-remote.sh`, release archives seeded with `HYPRUNE_RELEASE_DIR`
+because the worlds releases are private): `nix flake check` passed: core CTest
+28/28, shell 150 tests, sdk 70 pass / 2 skipped, starter 38 tests.
+
 ## 2026-10-10: core 9587032, shell 78e6749, sdk be7a020, schema f76922b (IPC 0.19)
 
 IPC 0.18 (offload device selection, automatic power cap and its source) and
