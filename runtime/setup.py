@@ -149,8 +149,10 @@ def compile_kit(kit, plugin, world_dirs, settings, external_plugin=False):
     for key, workspace in sorted(keys.items()):
         lines.append(f'hl.bind("SUPER + {key}", hl.dsp.focus({{ workspace = {lua(str(workspace))} }}))')
     for app in kit.get('apps', []):
+        # Apps away from the start workspace open silently, so the session starts where the kit says.
+        workspace = str(app['workspace']) + ('' if app['workspace'] == kit['initial_workspace'] else ' silent')
         lines.append('hl.window_rule(' + lua(dict(name='hyprune-' + app['class'],
-                     match={'class': '^' + re.escape(app['class']) + '$'}, workspace=str(app['workspace']))) + ')')
+                     match={'class': '^' + re.escape(app['class']) + '$'}, workspace=workspace)) + ')')
     # The supervisor explicitly launches shell/apps once, with an inherited token.
     session = dict(world_dirs=[str(p) for p in world_dirs], initial_workspace=kit['initial_workspace'], start=start,
                    apps=kit.get('apps', []), shell=['hyprune-shell'], kit=kit['name'])
