@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -216,7 +217,8 @@ class InstallTests(unittest.TestCase):
     def test_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as temp:
             env = {**os.environ, 'HOME': temp, 'XDG_CONFIG_HOME': temp + '/config', 'XDG_DATA_HOME': temp + '/data'}
-            result = subprocess.run([str(ROOT / 'install.sh'), '--dry-run', '--kit', 'minimal'], env=env,
+            # Through bash from PATH: build sandboxes have no /usr/bin/env for the shebang.
+            result = subprocess.run([shutil.which('bash') or 'bash', str(ROOT / 'install.sh'), '--dry-run', '--kit', 'minimal'], env=env,
                                     capture_output=True, text=True)
             # Test host may have an incompatible compositor; that must fail safely.
             self.assertIn(result.returncode, [0, 1])
@@ -371,7 +373,8 @@ class SessionTests(unittest.TestCase):
             (config / 'session.lua').write_text('-- fixture\n')
             (config / 'locations.json').write_text(json.dumps(locations))
             fake = base / 'fake-hyprland'
-            fake.write_text('''#!/usr/bin/env python3
+            # An absolute interpreter: build sandboxes have no /usr/bin/env.
+            fake.write_text('#!' + sys.executable + '''
 import json, os, pathlib, socket, struct, sys
 if '--version' in sys.argv:
     print('Hyprland 0.56.2'); sys.exit(0)
