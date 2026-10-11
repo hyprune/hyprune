@@ -52,11 +52,11 @@
     "docs": {
       "flake": false,
       "locked": {
-        "lastModified": 1791748948,
-        "narHash": "sha256-wI+6OGkHnPSB/u1dRVVGsU37I55y41NKMlRJ4f5TibA=",
+        "lastModified": 1791758466,
+        "narHash": "sha256-mxFyYRngBzC0Y5wHTMuenhmwYOWkB3qPxedYSzYqTVY=",
         "owner": "hyprune",
         "repo": "docs",
-        "rev": "e879ce818504e0b223f4d7c184312964241f0574",
+        "rev": "6f8d5156ac1a2c829908dc43cd7e8df0d1733d9d",
         "type": "github"
       },
       "original": {
@@ -541,11 +541,11 @@
     "worlds": {
       "flake": false,
       "locked": {
-        "lastModified": 1791748892,
-        "narHash": "sha256-C+PvAAaCwKEFwsrKMJ5eT0kN0nK5ha0OsIEK2z8QoFA=",
+        "lastModified": 1791756608,
+        "narHash": "sha256-EYiSUO3sZEcSDaA2EJKAkNoiNNokiXa8kd+wGqIcIXk=",
         "owner": "hyprune",
         "repo": "worlds",
-        "rev": "baeb8ceb0987a6ee30ddbcb6431ff372eaf80041",
+        "rev": "989f1d5533e6210e015a46e0c2ca650ad8098b3a",
         "type": "github"
       },
       "original": {
