@@ -368,7 +368,8 @@ def main():
     import shlex
     commands = {
         'hyprune-session': [str(active / 'venv/bin/python'), str(active / 'runtime/session.py')],
-        'hyprune-shell': [str(active / 'venv/bin/python'), str(active / 'shell/bridge/launch.py'), '--protocol', '0.6'],
+        # No --protocol: the pinned shell negotiates its newest vendored protocol (as Nix does).
+        'hyprune-shell': [str(active / 'venv/bin/python'), str(active / 'shell/bridge/launch.py')],
         'hyprune': ['node', str(active / 'sdk/dist/src/cli.js')],
         'hyprune-mock': ['node', str(active / 'sdk/dist/src/mock-cli.js')],
     }

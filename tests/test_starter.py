@@ -416,7 +416,7 @@ server.close(); native.close()
             shell.write_text('''import os, socket
 assert os.environ['HYPRLAND_INSTANCE_SIGNATURE'] == 'fixture'
 assert os.environ['WAYLAND_DISPLAY'] == 'wayland-fixture'
-assert os.environ['HYPRUNE_PROTOCOL'] == '0.6'
+assert 'HYPRUNE_PROTOCOL' not in os.environ  # the shell negotiates its newest protocol
 assert 'HYPRUNE_LAUNCH_FD' not in os.environ
 fd = int(os.environ['HYPRUNE_TOKEN_FD']); token = os.read(fd, 128); os.close(fd)
 peer = socket.socket(socket.AF_UNIX); peer.connect(os.environ['HYPRUNE_SOCKET']); peer.sendall(b'SHEL' + token); peer.close()

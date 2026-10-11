@@ -186,7 +186,8 @@ def run(args, extra):
         compositor = subprocess.Popen([args.hyprland, '-c', str(config_path), *extra], env=env, pass_fds=(grant_fd,))
         os.close(grant_fd); grant_fd = -1
         local = child_environment(runtime, compositor, config_path)
-        child_env = {**env, **local, 'HYPRUNE_PROTOCOL': '0.6'}
+        # No HYPRUNE_PROTOCOL: the shell negotiates its newest vendored protocol with core.
+        child_env = {**env, **local}
         child_env.pop('HYPRUNE_LAUNCH_FD', None)
         # Kits compiled since world-defined homes carry the start world; older
         # user-owned profiles still name an initial workspace in locations.json.
