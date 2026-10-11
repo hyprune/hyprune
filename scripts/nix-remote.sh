@@ -38,11 +38,15 @@ if [[ $# -eq 0 ]]; then
   set -- flake check --print-build-logs
 fi
 rsync -a --delete "$STAGE/" "$HOST:$REMOTE/"
+# Builds run in Nix's sandbox, as on CI: the nixos/nix image disables it by default
+# (and would silently fall back), which once hid tests that only pass with /usr/bin/env.
 printf -v ARGS '%q ' --extra-experimental-features 'nix-command flakes' --option cores 0 --option max-jobs 8 \
+  --option sandbox true --option sandbox-fallback false \
   --option extra-substituters https://hyprland.cachix.org \
   --option extra-trusted-public-keys 'hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=' \
   "$@" --no-write-lock-file "${OVERRIDES[@]}"
+# --privileged: the sandbox needs mount and user namespaces inside the container.
 # shellcheck disable=SC2029 # ARGS is quoted locally on purpose.
-ssh "$HOST" "docker run --rm -v \"\$HOME/$REMOTE/src:/src\" -v \"\$HOME/$REMOTE/components:/components:ro\" \
+ssh "$HOST" "docker run --rm --privileged -v \"\$HOME/$REMOTE/src:/src\" -v \"\$HOME/$REMOTE/components:/components:ro\" \
   -v \"\$HOME/$REMOTE/releases:/releases:ro\" -v hyprune-nix-store:/nix -w /src nixos/nix:latest \
   sh -c 'for f in /releases/*.tar.zst; do [ -e \"\$f\" ] && nix-store --add-fixed sha256 \"\$f\" >/dev/null; done; exec nix \"\$@\"' sh $ARGS"
