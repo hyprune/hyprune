@@ -13,7 +13,7 @@ worlds and starter kits. Start in our vision, then change every part of it.
 Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
 **0.19**; the shell negotiates its newest supported protocol with core. Component
 repositories are currently private. Minimal is self-contained. **Lumen Reach 0.9.1**
-(world format 0.7) and **Switchyard 0.1.1** are published releases, pinned by URL
+(world format 0.7) and **Switchyard 0.1.2** are published releases, pinned by URL
 and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
 that use them. Dedicated DRM/hardware-cursor acceptance still needs a supervised
 hardware checklist; container tests cannot verify it.
@@ -22,7 +22,7 @@ hardware checklist; container tests cannot verify it.
 | --- | --- | --- | --- |
 | `lumen-reach` | Sun Court, Array Hall, Rime Vault, Signal Rise; desk terminals and btop kiosk | High; switch to `intel` for a lighter tier | Lumen Reach 0.9.1 release |
 | `minimal` | One quiet home, terminal, workspace wall and spare lectern; 12 triangles, no textures | Intel tier, bloom off, reduced motion | Included, original CC0 |
-| `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard 0.1.1 release |
+| `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard 0.1.2 release |
 
 All kits use core's M3B keymap and the shell's built-in dark theme. The loaded
 world defines where workspaces are: the world itself runs on room workspace 20,
