@@ -3,6 +3,13 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: core 1c2cb93
+
+Core 1c2cb93 applies deferred input at the start of the world tick, so recorded input
+takes effect in its recorded frame and replays stay exact under load.
+`try/manifest.json` names core 1c2cb93 with its source archive hash recomputed. `nix
+flake check` passed on clean `git archive` snapshots (core CTest 40/40).
+
 ## 2026-10-12: core 027b20e, sdk d7fffb9
 
 The sdk check's mock demo test waits for the first stats line (it ran a fixed
