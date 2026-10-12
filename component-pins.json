@@ -1,20 +1,20 @@
 {
   "core": {
-    "rev": "eb562cd31f23290686e2343185e9b943c305b34e"
+    "rev": "92e4fe89f2727031e9013d49954517a9149006c3"
   },
   "shell": {
-    "rev": "c547ef8bb1f1a2e9e892d5c8ab569716f6d08d36"
+    "rev": "d1dd22d6f1cf775c36f7b735c42a865e59cbf3aa"
   },
   "sdk": {
-    "rev": "cfd7f4d41093cf86ffe878a700f9cda766af30a0"
+    "rev": "3a65a648be89f1311b866dba6c7218359269da77"
   },
   "worlds": {
     "rev": "596d0f914fcc0ab23e4273e3860632f5cfd13e70"
   },
   "schema": {
-    "rev": "9c5570d12c7cc248ad4c15d394b27497f1ee94fe"
+    "rev": "ce517ea22d90b96c7e2eb9e00903c99be62f2f86"
   },
   "docs": {
-    "rev": "9769946343a61c463f729d1efefe60191571b7cb"
+    "rev": "b94f159fa49b1d4f065f16ca84ce8add0e62e5b9"
   }
 }
