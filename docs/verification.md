@@ -3,6 +3,16 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: worlds d155516, schema ab7a2a8, sdk 73cfa63, docs 4857140; Lumen Reach 0.10.3
+
+Lumen Reach 0.10.3 (plain Sun Court paving) replaces 0.10.2 in `worlds/releases.json`.
+`libraries/releases.json` pins the first official object library, `hyprune-starter`
+0.1.0 (`com.hyprune.starter`, object format 0.10), per RFC-0011; its archive was
+downloaded and matches the pinned sha256 and nixHash. Schema 0.7.0 and SDK 0.5.0 (the
+Nix SDK package's version and npmDepsHash follow its lock). Core stays b55058b.
+`nix flake check` passed on clean `git archive` snapshots: sdk 110 pass / 2 skipped,
+starter 47 tests (1 skipped), the world-format check on the published Lumen Reach 0.10.3.
+
 ## 2026-10-12: core b55058b, docs 906a19d
 
 Core b55058b (IPC 0.22, no wire change): paths draw only in the path tool, whose points
@@ -198,6 +208,7 @@ kits/{lumen-reach,minimal,dev}/kit.toml
 runtime/                   kit compiler, trusted session launcher, installer
 install.sh                 Arch-first entry point
 worlds/releases.json        release URLs, hashes and formatVersion
+libraries/releases.json     official object library releases (RFC-0011)
 worlds/minimal/             tiny original, data-only CC0 world
 scripts/                   Docker Nix testing, deterministic Minimal generation
 tests/                     starter/config/archive/credential tests

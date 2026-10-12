@@ -13,7 +13,7 @@ worlds and starter kits. Start in our vision, then change every part of it.
 Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
 **0.22**; the shell negotiates its newest supported protocol with core. Every
 component is public on [GitHub](https://github.com/hyprune) under MIT (worlds:
-CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.10.2**
+CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.10.3**
 (world format 0.8) and **Switchyard 0.1.2** are published releases, pinned by URL
 and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
 that use them. Dedicated DRM/hardware-cursor acceptance still needs a supervised
@@ -21,7 +21,7 @@ hardware checklist; container tests cannot verify it.
 
 | Kit | First experience | Graphics | Distribution |
 | --- | --- | --- | --- |
-| `lumen-reach` | Sun Court, Array Hall, Rime Vault, Signal Rise; desk terminals and btop kiosk | High; switch to `intel` for a lighter tier | Lumen Reach 0.10.2 release |
+| `lumen-reach` | Sun Court, Array Hall, Rime Vault, Signal Rise; desk terminals and btop kiosk | High; switch to `intel` for a lighter tier | Lumen Reach 0.10.3 release |
 | `minimal` | One quiet home, terminal, workspace wall and spare lectern; 12 triangles, no textures | Intel tier, bloom off, reduced motion | Included, original CC0 |
 | `dev` | Switchyard plus a typed debug home; SDK doctor/mock and U debug capture | Auto | Switchyard 0.1.2 release |
 

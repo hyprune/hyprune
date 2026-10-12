@@ -75,8 +75,8 @@ let
     meta.license = lib.licenses.mit;
   };
   sdk = pkgs.buildNpmPackage {
-    pname = "hyprune-sdk"; version = "0.4.0"; src = inputs.sdk;
-    npmDepsHash = "sha256-GfNhuMZBf6WmgtvSXUzYPqpMwpkTsJTfPFpsXuHVC2k=";
+    pname = "hyprune-sdk"; version = "0.5.0"; src = inputs.sdk;
+    npmDepsHash = "sha256-8K0SgD9y1JovCei+2uB1yJ0vxg9rBGc25uBbN7wj0DE=";
     nodejs = pkgs.nodejs_24;
     npmFlags = [ "--ignore-scripts" ];
     npmBuildScript = "build";
