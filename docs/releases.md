@@ -24,6 +24,16 @@
    with `provenance.json`. Decide whether Switchyard should gain typed workspace
    areas; the dev kit currently reports its legacy limitation.
 
+7. Object libraries are GitHub Releases on `hyprune/worlds` (`<name>-v<version>`),
+   built by the worlds repository's `tools/library-pack`, which also writes the
+   pin. Add it to `libraries/releases.json` under its `id@version` key; a pin with
+   `published: true` is preinstalled by `try.sh`, `install.sh` and the Nix modules,
+   and the release tag in content records is read from its URL. `nix flake check`
+   (`release-libraries`) unpacks each pin and runs core's and the SDK's library
+   checks.
+8. When the SDK pin moves, update `try/manifest.json`'s `sdkRev`, `sdkUrl` and
+   `sdkSha256` too: `try.sh` builds the `hyprune` CLI from that archive.
+
 Convert a verified archive hash to Nix SRI without fetching anything:
 
 ```sh

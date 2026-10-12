@@ -94,6 +94,24 @@ Core rejects symlinks in world roots and assets. The launcher copies Nix package
 bytes into that data directory on first use, rather than linking individual
 worlds or files. Existing packages remain unchanged until you move them aside.
 
+## Object libraries
+
+Kits don't list libraries: every install path preinstalls each published pin in
+`libraries/releases.json` (keyed by `id@version`, the schema's `library-releases`
+record), after checking its SHA-256 and unpacking it with the RFC-0004 archive
+rules, the library limits (4,000 files, 512 MiB expanded, 32 MiB per file), the
+data-only rule and a `library.json` id and version check.
+
+| Install path | Where | Managed by |
+| --- | --- | --- |
+| `try.sh` | `<folder>/data/hyprune/libraries/<id>@<version>/` | the folder (`--no-libraries` skips) |
+| `install.sh` | `$XDG_DATA_HOME/hyprune/libraries/<id>@<version>/`, recorded in `$XDG_STATE_HOME/hyprune/content.json` as `source: "official"` | the user: `hyprune` updates or removes it (`--no-libraries` skips) |
+| Nix modules | a store path per library, listed in the session's `HYPRUNE_LIBRARY_DIR` | the system configuration (read-only): `programs.hyprune.libraries.pinned`, `.extra` |
+
+A directory that already exists is kept as it is, and a library whose install record
+names another version is left to the CLI. Worlds reference library objects by
+exact `id@version`.
+
 ## Apply defaults without losing edits
 
 Fresh profiles use:

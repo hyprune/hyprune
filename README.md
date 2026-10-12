@@ -16,7 +16,10 @@ component is public on [GitHub](https://github.com/hyprune) under MIT (worlds:
 CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.11.0**
 (world format 0.9) and **Switchyard 0.1.2** are published releases, pinned by URL
 and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
-that use them. Dedicated DRM/hardware-cursor acceptance still needs a supervised
+that use them. The official object library, the **Hyprune starter kit**
+(`com.hyprune.starter` 0.1.0), is pinned in
+[libraries/releases.json](libraries/releases.json) and preinstalled by every
+install path below. Dedicated DRM/hardware-cursor acceptance still needs a supervised
 hardware checklist; container tests cannot verify it.
 
 | Kit | First experience | Graphics | Distribution |
@@ -50,12 +53,13 @@ Quickshell, Python, Nix, disk and memory, with a verdict and the exact fix
 command for your distribution. `try` runs the same checks and stops (printing
 the commands) if anything is missing; it never runs a package manager. Then it
 downloads core for the pinned Hyprland ABI (or builds it inside the folder until
-a prebuilt release matches), the shell with a private venv, and Lumen Reach,
-verifying every SHA-256, and opens a nested Hyprland window at Sun Court. Inside
+a prebuilt release matches), the shell with a private venv, Lumen Reach and the
+pinned object libraries, verifying every SHA-256, plus the `hyprune` CLI (the
+Director's Library page uses it) when Node.js 22.12+ and npm are present, and opens a nested Hyprland window at Sun Court. Inside
 the window Super chords also work with Alt; quit with Alt+Shift+Q.
 
 ```sh
-curl -fsSL https://hyprune.com/try | bash -s -- --dir ~/hyprune-try --dry-run   # also --live, --world, --no-run, --ref
+curl -fsSL https://hyprune.com/try | bash -s -- --dir ~/hyprune-try --dry-run   # also --live, --world, --no-run, --no-libraries, --ref
 ~/hyprune-try/run          # the window again; --live loads into your running Hyprland, --stop undoes it
 ~/hyprune-try/uninstall    # deletes the folder; nothing else to undo
 ```
@@ -95,8 +99,14 @@ programs.hyprune = {
   kit = "minimal"; # or "lumen-reach", "dev"
   worlds = [];    # additional "lumen-reach", "switchyard", "minimal"
   settings.graphics = { quality = "intel"; reduced_motion = true; };
+  libraries.pinned = true; # official object libraries, read-only (the default)
+  libraries.extra = [];    # more library roots holding <id>@<version>/ directories
 };
 ```
+
+The pinned libraries are fixed-output downloads unpacked with the installer's
+archive rules; the session's `HYPRUNE_LIBRARY_DIR` lists them, so the Director
+shows them as system-managed (update or remove them in your configuration).
 
 Rebuild and choose **Hyprune (minimal)** at login, or run `Hyprland` from a TTY.
 The module selects the same pinned compositor used to compile the plugin, plus
@@ -123,7 +133,10 @@ hyprune-session
 ```
 
 The script checks both the compositor binary and plugin-header version, builds
-the pinned core and SDK, installs the Python bridge in a private venv, and uses
+the pinned core and SDK (the `hyprune` CLI), unpacks the pinned object libraries
+into `~/.local/share/hyprune/libraries/<id>@<version>/` (`--no-libraries` skips
+them), records them and the kit's release worlds as official installs in
+`~/.local/state/hyprune/content.json` so `hyprune` can update them, installs the Python bridge in a private venv, and uses
 Arch's Quickshell. It uses CMake because core has no hyprpm manifest; see the
 [proposal and helper-path prerequisite](proposals/README.md). It doesn't change
 the compositor version for you. A newer Arch Hyprland must be deliberately
@@ -141,7 +154,8 @@ it prints the `sudo install` line that lists Hyprune on your login screen, and
 never runs it for you.
 
 `./install.sh --uninstall --dry-run` previews removal; `--uninstall` removes
-unchanged wrappers and icons and moves the installed build to a rollback backup. Removing
+unchanged wrappers and icons, the libraries it unpacked (unless you updated them
+since), and moves the installed build to a rollback backup. Removing
 the include also requires its own diff/confirmation. Config, state, worlds,
 backups and distro dependencies remain yours. Rerunning install preserves edits
 and existing worlds. **Fedora/Debian package installation is not implemented or
