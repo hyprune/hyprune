@@ -48,9 +48,25 @@ let
       cp hyprune-core.so $out/lib/hyprune-core.so
       cp hypruned hyprune-renderer hyprune-world-check $out/bin/
       cp ../config/input.default.json $out/share/hyprune/input.default.json
+      # Machines: the data.publish source helper (hyprune-session starts it for
+      # sources.json from <prefix>/libexec, beside lib/) and the system gauge script.
+      install -Dm755 ../dev/machines/source-helper.py $out/libexec/hyprune/source-helper
+      install -Dm755 ../dev/machines/scripts/system-gauges.py $out/share/hyprune/machines/system-gauges.py
+      ln -s ../share/hyprune/machines/system-gauges.py $out/bin/hyprune-system-gauges
+      for script in $out/libexec/hyprune/source-helper $out/share/hyprune/machines/system-gauges.py; do
+        substituteInPlace $script --replace-fail '#!/usr/bin/env python3' '#!${pkgs.python3.interpreter}'
+      done
       mkdir -p $out/share/licenses/hyprune-core
       cp ../LICENSE $out/share/licenses/hyprune-core/
       cp -r ../third_party $out/share/licenses/hyprune-core/
+    '';
+    doInstallCheck = true;
+    installCheckPhase = ''
+      runHook preInstallCheck
+      # Both run from the installed paths alone (standard-library Python, no checkout).
+      $out/libexec/hyprune/source-helper --help > /dev/null
+      $out/bin/hyprune-system-gauges ram | ${pkgs.python3.interpreter} -c 'import json, sys; assert json.load(sys.stdin)["label"] == "RAM"'
+      runHook postInstallCheck
     '';
     passthru = { inherit hyprland; };
     meta = { license = lib.licenses.mit; platforms = lib.platforms.linux; };
@@ -164,6 +180,8 @@ let
       runtime=$(mktemp -d "$base/ht.XXXX")
       trap 'rm -rf "$runtime"' EXIT
       echo "Hyprune (Nix): a nested window; your session is untouched. Quit: Alt+Shift+Q or Ctrl+C."
+      # sources.json in the folder's config feeds gauges through core's source helper.
+      export HYPRUNE_SOURCE_HELPER=${core}/libexec/hyprune/source-helper
       XDG_RUNTIME_DIR=$runtime python3 ${starter}/share/hyprune/runtime/session.py --window --enter \
         --hyprland ${hyprland}/bin/Hyprland
     '';

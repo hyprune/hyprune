@@ -272,6 +272,21 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(list(stage.iterdir()), [])
 
 
+    def test_generation_installs_the_source_helper_beside_the_plugin(self):
+        with tempfile.TemporaryDirectory() as temp:
+            core, generation = Path(temp) / 'core', Path(temp) / 'generation'
+            for name in ['dev/machines/source-helper.py', 'dev/machines/scripts/system-gauges.py']:
+                (core / name).parent.mkdir(parents=True, exist_ok=True)
+                (core / name).write_text('#!/usr/bin/env python3\n')
+            install.install_machines(core, generation)
+            helper = generation / 'libexec/hyprune/source-helper'
+            self.assertTrue(os.access(helper, os.X_OK))
+            self.assertEqual(generation / 'libexec/hyprune/source-helper', helper)
+            gauges = generation / 'bin/hyprune-system-gauges'
+            self.assertEqual(gauges.resolve(), (generation / 'share/hyprune/machines/system-gauges.py').resolve())
+            self.assertTrue(os.access(gauges, os.X_OK))
+
+
 class WorldFormatTests(unittest.TestCase):
     """The pinned core must load every pinned world release's format."""
     script = ROOT / 'scripts/check-world-formats.py'

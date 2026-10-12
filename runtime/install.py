@@ -224,6 +224,18 @@ def uninstall(args, prefix, config_dir):
     print(f'User config/state/worlds and package dependencies preserved. Remove {backup} after review.')
 
 
+
+def install_machines(core, prefix):
+    """Core's source helper and system gauge script, in the layout of its release archive:
+    hyprune-session finds libexec/hyprune/source-helper beside lib/hyprune-core.so."""
+    for source, target in [('dev/machines/source-helper.py', 'libexec/hyprune/source-helper'),
+                           ('dev/machines/scripts/system-gauges.py', 'share/hyprune/machines/system-gauges.py')]:
+        (prefix / target).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(core / source, prefix / target)
+        (prefix / target).chmod(0o755)
+    (prefix / 'bin').mkdir(exist_ok=True)
+    (prefix / 'bin/hyprune-system-gauges').symlink_to('../share/hyprune/machines/system-gauges.py')
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kit', choices=['lumen-reach', 'minimal', 'dev'], default='lumen-reach')
@@ -317,6 +329,7 @@ def main():
             for name in ['hypruned', 'hyprune-renderer', 'hyprune-world-check']:
                 shutil.copy2(core / 'build' / name, generation / 'bin' / name)
             shutil.copy2(core / 'build/hyprune-core.so', generation / 'lib/hyprune-core.so')
+            install_machines(core, generation)
             run(sys.executable, '-m', 'venv', generation / 'venv')
             run(generation / 'venv/bin/pip', 'install', '--require-hashes', '-r', generation / 'shell/requirements.txt')
             run('npm', 'ci', '--ignore-scripts', cwd=generation / 'sdk')
