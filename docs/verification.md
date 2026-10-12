@@ -3,12 +3,15 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
-## 2026-10-12: sdk d7fffb9
+## 2026-10-12: core 027b20e, sdk d7fffb9
 
 The sdk check's mock demo test waits for the first stats line (it ran a fixed
 2.5 s window, which a slow runner missed). SDK 0.4.0, npm lock unchanged. `nix flake
 check` passed on clean `git archive` snapshots; the sdk check also passes in the
 sandbox limited to one CPU (110 pass / 2 skipped).
+Core 027b20e gives each nested harness script its own state directory; core
+CTest 40/40 in the check. `try/manifest.json` names core 027b20e with its source
+archive hash recomputed.
 
 ## 2026-10-12: core 6dd4661, shell d1dd22d, sdk 3a65a64, schema ce517ea, docs b94f159 (IPC 0.22)
 
