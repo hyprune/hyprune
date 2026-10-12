@@ -1,0 +1,4 @@
+#!/bin/sh
+# HYPRUNE_DAEMON for a hyprune-session compositor: core's plugin spawns this with no
+# arguments; session.py hands hypruned its grant channel, then execs it.
+exec "${HYPRUNE_SESSION_PYTHON:?}" "$(dirname -- "$0")/session.py" --session-daemon

@@ -184,6 +184,44 @@ JSON and persistent layout contracts. Files under `~/.config/hyprune` and
 or settings supplies new defaults for a fresh profile; it does not overwrite an
 existing profile. [Fork a kit or start from scratch](docs/kits.md).
 
+### Feed a gauge from a script
+
+Placed gauges (and other machines) show data that core's source helper publishes.
+Every install ships it with core: `libexec/hyprune/source-helper`, the gauge
+script `share/hyprune/machines/system-gauges.py` (CPU, RAM, GPU, VRAM) and the
+command `hyprune-system-gauges` that runs it, under core's prefix (the Nix `core`
+package, `~/.local/share/hyprune/install/current` for the Arch script, `core/` in a
+try folder).
+
+1. Place a gauge: Director → Objects → Catalog, add a gauge (Machines), place it
+   with tool 5.
+2. Note its instance id: Director → Objects → Placed shows `Data source id: u-3f9a1c`.
+3. Write `~/.config/hyprune/sources.json` (`$XDG_CONFIG_HOME/hyprune`), one entry
+   per gauge, with the instance id as `id`:
+
+   ```json
+   {"sources": [
+     {"id": "u-3f9a1c", "kind": "command", "argv": ["hyprune-system-gauges", "ram"],
+      "intervalS": 5, "timeoutS": 4}
+   ]}
+   ```
+
+   Any executable that prints one JSON object such as
+   `{"value": 71, "display": "71%", "label": "RAM", "level": "ok"}` works; give its
+   absolute path. Use `intervalS` 10 or more for `gpu` and `vram`.
+4. Start `hyprune-session` (or your Nix session). It always starts the helper right
+   after the shell, with its own `data.publish` grant for `com.hyprune.sources` and
+   `--config` pointing at `sources.json` (it idles while the file does not exist), and
+   stops it with the session. Its log is `~/.local/state/hyprune/source-helper.log`.
+
+Edits to `sources.json`, including a new file, apply while the session runs. The
+helper renews its grant through core whenever it reconnects: the session starts core's
+`hypruned` through `runtime/session-daemon`, which hands it a private grant channel
+(`HYPRUNE_GRANT_FD`) that only `hypruned` and the session hold. The session does not
+restart a helper that exits (as with the shell); the next session starts a new one.
+The source format, script contract and limits are in core's
+[machines guide](https://github.com/hyprune/core/blob/main/dev/machines/README.md).
+
 Code and docs: MIT. Quiet Desk: CC0-1.0. Lumen Reach gallery stills: Hyprune
 contributors, CC-BY-4.0, resized without retouching;
 [image provenance](docs/images/provenance.json). Logo and app icons: Hyprune

@@ -281,7 +281,7 @@ class InstallTests(unittest.TestCase):
             install.install_machines(core, generation)
             helper = generation / 'libexec/hyprune/source-helper'
             self.assertTrue(os.access(helper, os.X_OK))
-            self.assertEqual(generation / 'libexec/hyprune/source-helper', helper)
+            self.assertEqual(session.source_helper(dict(HYPRUNE_PLUGIN=str(generation / 'lib/hyprune-core.so'))), helper)
             gauges = generation / 'bin/hyprune-system-gauges'
             self.assertEqual(gauges.resolve(), (generation / 'share/hyprune/machines/system-gauges.py').resolve())
             self.assertTrue(os.access(gauges, os.X_OK))
@@ -380,8 +380,38 @@ class SessionTests(unittest.TestCase):
         self.run_supervisor([], dict(initial_workspace=21, start=dict(worldId='com.hyprune.minimal')),
                             dict(worldId='com.hyprune.minimal'))
 
-    def run_supervisor(self, locations, session_fields, expected_load):
+    def test_source_helper_always_starts_and_renews_through_core(self):
+        # No sources.json: the helper still starts (it idles until the file appears), with a
+        # data.publish-only grant that core's grant issuer renews through session-daemon.
+        self.run_supervisor([], dict(initial_workspace=21, start=dict(worldId='com.hyprune.minimal')),
+                            dict(worldId='com.hyprune.minimal'), helper='renew')
+
+    def test_source_helper_without_hypruned_gets_a_one_use_grant(self):
+        self.run_supervisor([], dict(initial_workspace=21, start=dict(worldId='com.hyprune.minimal')),
+                            dict(worldId='com.hyprune.minimal'), helper='one-use')
+
+    def test_source_helper_location(self):
+        with tempfile.TemporaryDirectory() as temp:
+            prefix = Path(temp)
+            helper = prefix / 'libexec/hyprune/source-helper'
+            env = dict(HYPRUNE_PLUGIN=str(prefix / 'lib/hyprune-core.so'))
+            self.assertIsNone(session.source_helper(env))
+            self.assertIsNone(session.core_daemon(env))
+            helper.parent.mkdir(parents=True); helper.write_text('')
+            (prefix / 'bin').mkdir(); (prefix / 'bin/hypruned').write_text('')
+            self.assertEqual(session.source_helper(env), helper)
+            self.assertEqual(session.core_daemon(env), prefix / 'bin/hypruned')
+            other = prefix / 'checkout-helper.py'; other.write_text('')
+            self.assertEqual(session.source_helper(dict(env, HYPRUNE_SOURCE_HELPER=str(other))), other)
+            self.assertEqual(session.core_daemon(dict(env, HYPRUNE_DAEMON=str(other))), other)
+            self.assertIsNone(session.source_helper(dict(env, HYPRUNE_SOURCE_HELPER=str(prefix / 'missing'))))
+            self.assertIsNone(session.source_helper({}))
+            self.assertTrue(os.access(session.DAEMON_WRAPPER, os.X_OK))
+
+    def run_supervisor(self, locations, session_fields, expected_load, helper=None):
         # Process/socket fixture; no compositor binary, GPU or owner-session IPC.
+        # helper: None (core without a source helper), 'one-use' (a helper, no hypruned to
+        # wrap) or 'renew' (both: the fake compositor spawns HYPRUNE_DAEMON like core's plugin).
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp); runtime = base / 'runtime'; runtime.mkdir(mode=0o700)
             config = base / 'config/hyprune'; config.mkdir(parents=True)
@@ -389,17 +419,35 @@ class SessionTests(unittest.TestCase):
             (config / 'locations.json').write_text(json.dumps(locations))
             fake = base / 'fake-hyprland'
             # An absolute interpreter: build sandboxes have no /usr/bin/env.
-            fake.write_text('#!' + sys.executable + '''
-import json, os, pathlib, socket, struct, sys
+            fake.write_text('#!' + sys.executable + """
+import json, os, pathlib, socket, struct, subprocess, sys, time
 if '--version' in sys.argv:
     print('Hyprland 0.56.2'); sys.exit(0)
+mode = os.environ['FIXTURE_HELPER']
 fd = int(os.environ['HYPRUNE_LAUNCH_FD'])
-grants = json.loads(os.read(fd, 8192)); os.close(fd)
-assert len(grants) == 2 and grants[0]['client'] == 'com.hyprune.shell'
+data = os.read(fd, 8192); os.close(fd)
+grants = json.loads(data)
+assert len(grants) == (2 if mode == 'none' else 3) and grants[0]['client'] == 'com.hyprune.shell'
 assert 'input.control' in grants[0]['capabilities']
 assert grants[1]['client'] == 'com.hyprune.starter' and grants[1]['capabilities'] == ['world.control']
+if mode != 'none':
+    assert grants[2]['client'] == 'com.hyprune.sources' and grants[2]['capabilities'] == ['data.publish']
+    assert len({g['token'] for g in grants}) == 3
 assert 'HYPRLAND_INSTANCE_SIGNATURE' not in os.environ
+assert ('HYPRUNE_SESSION_GRANTS' in os.environ) == (mode == 'renew')
 root = pathlib.Path(os.environ['XDG_RUNTIME_DIR'])
+daemon = None
+if mode == 'renew':
+    # Like core's plugin: HYPRUNE_DAEMON with the bridge and the launch grants inherited.
+    assert os.environ['HYPRUNE_DAEMON'].endswith('/session-daemon')
+    bridge, _ = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+    read, write = os.pipe(); os.write(write, data); os.close(write)
+    daemon = subprocess.Popen([os.environ['HYPRUNE_DAEMON']], pass_fds=(bridge.fileno(), read),
+                              env=dict(os.environ, HYPRUNE_BRIDGE_FD=str(bridge.fileno()), HYPRUNE_LAUNCH_FD=str(read)))
+    os.close(read)
+    while not (root / 'daemon-ready').exists():
+        assert daemon.poll() is None, 'hypruned exited'
+        time.sleep(.01)
 lock = root / 'hypr/fixture/hyprland.lock'; lock.parent.mkdir(parents=True)
 lock.write_text(str(os.getpid()) + '\\nwayland-fixture\\n')
 native = socket.socket(socket.AF_UNIX); native.bind(str(lock.parent / '.socket.sock')); native.listen()
@@ -410,10 +458,21 @@ def exact(peer, count):
     while len(result) < count:
         part = peer.recv(count - len(result)); assert part; result += part
     return result
-for _ in range(2):
+seen = []
+for _ in range({'none': 2, 'one-use': 3, 'renew': 4}[mode]):
     peer, _ = server.accept(); head = exact(peer, 4)
+    seen.append(head)
     if head == b'SHEL':
         assert exact(peer, 65).decode().strip() == grants[0]['token']
+    elif head == b'SRCS':
+        token = exact(peer, 65).decode().strip()
+        if seen.count(b'SRCS') == 1:
+            assert token == grants[2]['token']
+        else:  # a reconnection: the token core's grant issuer reissued for the helper's PID
+            request = json.loads((root / 'renewal').read_text())
+            assert request['client'] == 'com.hyprune.sources' and request['token'] == token, request
+            peer_pid = struct.unpack('3i', peer.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))[0]
+            assert request['pid'] == peer_pid, (request, peer_pid)
     else:
         hello = json.loads(exact(peer, struct.unpack('!I', head)[0]))
         assert hello['params']['token'] == grants[1]['token']
@@ -426,9 +485,12 @@ for _ in range(2):
         assert request['params'] == json.loads(os.environ['EXPECTED_LOAD']), request['params']
         reply(request['id'], dict(revision=1))
     peer.close()
+assert seen.count(b'SRCS') == {'none': 0, 'one-use': 1, 'renew': 2}[mode] and b'SHEL' in seen, seen
 server.close(); native.close()
+if daemon:
+    daemon.terminate(); daemon.wait()
 (root / 'authorized').write_text('IPC 0.6 fixture authorized')
-''')
+""")
             fake.chmod(0o755)
             shell = base / 'fake-shell.py'
             shell.write_text('''import os, socket
@@ -436,20 +498,112 @@ assert os.environ['HYPRLAND_INSTANCE_SIGNATURE'] == 'fixture'
 assert os.environ['WAYLAND_DISPLAY'] == 'wayland-fixture'
 assert 'HYPRUNE_PROTOCOL' not in os.environ  # the shell negotiates its newest protocol
 assert 'HYPRUNE_LAUNCH_FD' not in os.environ
+assert not [k for k in os.environ if k.startswith('HYPRUNE_SESSION_')]
 fd = int(os.environ['HYPRUNE_TOKEN_FD']); token = os.read(fd, 128); os.close(fd)
 peer = socket.socket(socket.AF_UNIX); peer.connect(os.environ['HYPRUNE_SOCKET']); peer.sendall(b'SHEL' + token); peer.close()
 ''')
+            prefix = base / 'core'
+            if helper:
+                path = prefix / 'libexec/hyprune/source-helper'; path.parent.mkdir(parents=True)
+                # Started as `python3 <helper>`. One-use: one token line on a pipe, then EOF.
+                # Renewable: a socket; `renew` asks for the next token line.
+                path.write_text('''import os, socket, sys
+args = sys.argv[1:]
+renew = os.environ['FIXTURE_HELPER'] == 'renew'
+assert args[:2] == ['--config', os.environ['XDG_CONFIG_HOME'] + '/hyprune/sources.json'], args
+assert not os.path.exists(args[1])  # always started; it idles until sources.json appears
+assert args[2:4] == ['--socket', os.environ['HYPRUNE_SOCKET']] and args[4] == '--token-fd', args
+assert args[6:] == (['--token-refresh'] if renew else []), args
+assert not {'HYPRUNE_TOKEN_FD', 'HYPRUNE_LAUNCH_FD', 'HYPRUNE_TOKEN_REFRESH', 'HYPRUNE_GRANT_FD'} & set(os.environ)
+assert not [k for k in os.environ if k.startswith('HYPRUNE_SESSION_')]
+assert os.environ['PATH'].split(os.pathsep)[0] == os.path.dirname(os.path.dirname(os.path.dirname(__file__))) + '/bin'
+assert os.environ['HYPRLAND_INSTANCE_SIGNATURE'] == 'fixture'
+fd = int(args[5])
+def line():
+    data = b''
+    while not data.endswith(b'\\n'):
+        part = os.read(fd, 1); assert part, 'token channel closed'; data += part
+    return data
+def connect(token):
+    peer = socket.socket(socket.AF_UNIX); peer.connect(os.environ['HYPRUNE_SOCKET']); peer.sendall(b'SRCS' + token); peer.close()
+print('fixture helper connecting', flush=True)  # the session stops it once the compositor exits
+connect(line())
+if renew:
+    os.write(fd, b'renew\\n'); connect(line())
+else:
+    assert os.read(fd, 128) == b''
+''')
+            if helper == 'renew':
+                # Stands in for core's hypruned: its grant issuer answers renewals.
+                daemon = prefix / 'bin/hypruned'; daemon.parent.mkdir(parents=True)
+                daemon.write_text('#!' + sys.executable + """
+import os, pathlib, socket
+assert os.environ['HYPRUNE_LAUNCH_FD'] and os.environ['HYPRUNE_BRIDGE_FD']
+assert not [k for k in os.environ if k.startswith('HYPRUNE_SESSION_')]
+issuer = socket.socket(fileno=int(os.environ['HYPRUNE_GRANT_FD']))
+assert issuer.type == socket.SOCK_SEQPACKET
+root = pathlib.Path(os.environ['XDG_RUNTIME_DIR']); (root / 'daemon-ready').write_text('')
+while True:
+    request = issuer.recv(1024)
+    if not request:
+        break
+    (root / 'renewal').write_bytes(request)
+    issuer.send(b'{"ok": true}')
+""")
+                daemon.chmod(0o755)
             (config / 'session.json').write_text(json.dumps(dict(dict(world_dirs=[], apps=[],
                 initial_workspace=1, shell=[sys.executable, str(shell)]), **session_fields)))
             env = {**os.environ, 'XDG_CONFIG_HOME': str(base / 'config'),
                    'XDG_DATA_HOME': str(base / 'data'), 'XDG_STATE_HOME': str(base / 'state'),
                    'XDG_RUNTIME_DIR': str(runtime), 'PYTHONDONTWRITEBYTECODE': '1',
-                   'EXPECTED_LOAD': json.dumps(expected_load)}
-            env.pop('HYPRLAND_INSTANCE_SIGNATURE', None)
+                   'EXPECTED_LOAD': json.dumps(expected_load), 'FIXTURE_HELPER': helper or 'none',
+                   'HYPRUNE_PLUGIN': str(prefix / 'lib/hyprune-core.so')}
+            for name in ['HYPRLAND_INSTANCE_SIGNATURE', 'HYPRUNE_SOURCE_HELPER', 'HYPRUNE_DAEMON']:
+                env.pop(name, None)
             result = subprocess.run([sys.executable, str(ROOT / 'runtime/session.py'), '--hyprland', str(fake)],
-                                    env=env, capture_output=True, text=True, timeout=15)
+                                    env=env, capture_output=True, text=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((runtime / 'authorized').read_text(), 'IPC 0.6 fixture authorized')
+            log = base / 'state/hyprune/source-helper.log'
+            if helper:
+                self.assertEqual(log.read_text(), 'fixture helper connecting\n')
+            else:
+                self.assertFalse(log.exists())
+            self.assertEqual('core has no source helper' in result.stderr, not helper, result.stderr)
+            self.assertNotIn('stopped renewing', result.stderr)
+            self.assertEqual([p.name for p in runtime.iterdir() if p.name.startswith('hyprune-session-')], [])
+
+    def test_grant_broker_renews_only_for_its_child(self):
+        opened = []
+        self.addCleanup(lambda: [s.close() for s in opened])
+        def broker(pid, reply=b'{"ok": true}'):
+            channel, child = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
+            channel.setsockopt(socket.SOL_SOCKET, socket.SO_PASSCRED, 1)
+            issuer, daemon = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+            opened.extend([channel, child, issuer, daemon])
+            requests = []
+            def answer():
+                requests.append(json.loads(daemon.recv(1024))); daemon.send(reply)
+            b = session.GrantBroker(channel, issuer, argparse.Namespace(pid=pid), session.SOURCES_CLIENT)
+            return b, child, daemon, requests, answer
+        import threading
+        b, child, daemon, requests, answer = broker(os.getpid())
+        thread = threading.Thread(target=answer); thread.start()
+        child.sendall(b'renew\n')
+        self.assertTrue(b.handle()); thread.join()
+        self.assertEqual({k: requests[0][k] for k in ('client', 'pid')}, dict(client='com.hyprune.sources', pid=os.getpid()))
+        self.assertEqual(child.recv(128), requests[0]['token'].encode() + b'\n')
+        child.sendall(b'other\n'); self.assertFalse(b.handle())  # only `renew`
+        b, child, *_ = broker(os.getpid() + 1)  # a request from another process
+        child.sendall(b'renew\n'); self.assertFalse(b.handle())
+        b, child, daemon, requests, answer = broker(os.getpid(), reply=b'{"ok": false}')
+        thread = threading.Thread(target=answer); thread.start()
+        child.sendall(b'renew\n'); self.assertFalse(b.handle()); thread.join()
+        child.setblocking(False)
+        with self.assertRaises(BlockingIOError):
+            child.recv(128)  # core refused: no token goes out
+        b, child, *_ = broker(os.getpid())
+        child.close(); self.assertFalse(b.handle())  # the child exited
 
     def test_token_fd_contains_only_payload_and_is_not_inheritable_by_default(self):
         read = session.pipe_payload(b'secret\n')
