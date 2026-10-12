@@ -3,6 +3,17 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: core 92e4fe8, shell d1dd22d, sdk 3a65a64, schema ce517ea, docs b94f159 (IPC 0.22)
+
+IPC 0.22 (the objects runtime: catalog, pocket, place, transform) across schema,
+SDK, shell and core. The launcher grants the shell `objects.control`, which it
+requests only at 0.22, as `quest.control` at 0.21. `try/manifest.json` follows the
+core and shell pins with recomputed source archive hashes. Core's catalog test packs
+`.tar.zst` fixtures with the zstd CLI, so the core check now has zstd (the runtime
+decodes archives with its vendored decoder). `nix flake check` passed on clean
+`git archive` snapshots: core CTest 39/39, shell 243 tests, sdk 110 pass / 2 skipped
+(SDK 0.4.0, npm lock unchanged), starter 46 tests (1 skipped).
+
 ## 2026-10-12: core eb562cd, shell c547ef8, sdk cfd7f4d, schema 9c5570d, worlds 596d0f9, docs 9769946 (IPC 0.21)
 
 IPC 0.21 (quests and focus sessions) across schema, SDK, shell and core.
