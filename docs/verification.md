@@ -3,6 +3,16 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: core eb562cd, shell c547ef8, sdk cfd7f4d, schema 9c5570d, worlds 596d0f9, docs 9769946 (IPC 0.21)
+
+IPC 0.21 (quests and focus sessions) across schema, SDK, shell and core.
+`try/manifest.json` follows the core and shell pins, with the source archive
+hashes recomputed from GitHub. Lumen Reach stays at 0.10.2 (world format 0.8);
+README and the zero-to-the-trailer guide describe IPC 0.21 and that release.
+`nix flake check` passed on clean `git archive` snapshots of the pinned
+revisions: core CTest 37/37, shell 210 tests (1 skipped), sdk 96 pass /
+2 skipped (SDK 0.4.0, npm lock unchanged), starter 46 tests (1 skipped).
+
 ## 2026-10-11: worlds 3037c91; Lumen Reach 0.9.2
 
 Lumen Reach 0.9.2 has 0.9.1's content, rebuilt so no shipped PNG carries
