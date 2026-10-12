@@ -259,7 +259,7 @@ def main():
     library_root = content.data_home() / 'hyprune/libraries'
     state = content.state_home() / 'hyprune'
     if args.uninstall:
-        uninstall(args, prefix, config_dir)
+        uninstall(args, prefix, config_dir, state)
         return
     kit_path = Path(args.kit_file or ROOT / f'kits/{args.kit}/kit.toml').resolve()
     kit = load_kit(kit_path)
