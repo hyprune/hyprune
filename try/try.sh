@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Try Hyprune from one folder.   curl -fsSL https://hyprune.com/try | bash
-#   ... | bash -s -- [--dir DIR] [--world NAME] [--live] [--dry-run] [--no-run] [--ref REF]
+#   ... | bash -s -- [--dir DIR] [--world NAME] [--live] [--dry-run] [--no-run] [--no-libraries] [--ref REF]
 #
 # 1. Runs the compatibility check (check.sh). If something is missing it prints
 #    the install commands and stops: it never runs a package manager or sudo.
 # 2. Downloads into ONE folder (default ~/hyprune-try), checking every sha256:
 #    core built for your Hyprland (or builds it there from source), the shell
-#    with a private Python venv (hash-pinned packages), and the world release.
+#    with a private Python venv (hash-pinned packages), the world release and
+#    the published official object libraries (--no-libraries skips them).
 # 3. Writes DIR/run and DIR/uninstall. Config, state and caches stay in DIR:
 #    no login items, session entries, config edits or files elsewhere.
 # 4. Starts DIR/run: a nested Hyprland window inside your current session.
@@ -19,7 +20,7 @@ fetch() { curl -fsSL --proto '=https,file' --retry 2 "$1" ${2:+-o "$2"}; }
 verify() { echo "$2  $1" | sha256sum -c --quiet - >/dev/null 2>&1 || die "$1: sha256 mismatch, refusing it"; }
 
 main() {
-    local ref=${HYPRUNE_REF:-main} base=${HYPRUNE_BASE:-} dir=$HOME/hyprune-try world='' live=0 dry=0 run=1 here=''
+    local ref=${HYPRUNE_REF:-main} base=${HYPRUNE_BASE:-} dir=$HOME/hyprune-try world='' live=0 dry=0 run=1 libs=1 here=''
     while (($#)); do
         case $1 in
             --dir) dir=${2:?--dir needs a path}; shift ;;
@@ -27,8 +28,9 @@ main() {
             --live) live=1 ;;
             --dry-run) dry=1 ;;
             --no-run) run=0 ;;
+            --no-libraries) libs=0 ;;
             --ref) ref=${2:?--ref needs a ref}; shift ;;
-            -h | --help) echo "usage: try.sh [--dir DIR] [--world NAME] [--live] [--dry-run] [--no-run] [--ref REF]"; return ;;
+            -h | --help) echo "usage: try.sh [--dir DIR] [--world NAME] [--live] [--dry-run] [--no-run] [--no-libraries] [--ref REF]"; return ;;
             *) die "unknown option $1 (try --help)" ;;
         esac
         shift
@@ -59,6 +61,15 @@ main() {
     [[ -n $record ]] || die "no published world named $world in worlds/releases.json"
     read -r wid wversion wurl wsha <<<"$record"
     fetch "$base/kits/$world/kit.toml" >/dev/null || die "no kit for world $world"
+    # Published library pins: "id version url sha256" lines (RFC-0011 libraries/releases.json).
+    local libreleases='' libraries=''
+    if ((libs)); then
+        libreleases=$(fetch "$base/libraries/releases.json") || die "cannot read libraries/releases.json"
+        libraries=$(python3 -c 'import json,sys
+for r in json.loads(sys.argv[1]).values():
+    r["published"] and print(r["id"], r["version"], r["url"], r["sha256"])' "$libreleases") ||
+            die "cannot parse libraries/releases.json"
+    fi
 
     step "Plan"
     echo "  folder  $dir (everything goes here; ./uninstall deletes it)"
@@ -66,6 +77,9 @@ main() {
     else echo "  core    hyprune/core@$(manifest_get coreRev | cut -c1-7), built from source here (5-15 minutes)"; fi
     echo "  shell   hyprune/shell@$(manifest_get shellRev | cut -c1-7) and a private Python venv (hash-pinned packages from PyPI)"
     echo "  world   $wid $wversion"
+    local lid lversion
+    while read -r lid lversion _; do [[ -n $lid ]] && echo "  library $lid $lversion"; done <<<"$libraries"
+    ((libs)) || echo "  library none (--no-libraries)"
     if ((live)); then echo "  then    $dir/run --live (asks first)"; else echo "  then    $dir/run: a nested Hyprland window"; fi
     if ((dry)); then echo; echo "Dry run: nothing was downloaded or written."; return; fi
 
@@ -77,8 +91,9 @@ main() {
     mkdir -p "$dir/meta/try" "$dir/meta/worlds"
     printf '%s\n' "$MANIFEST_TEXT" >"$dir/meta/try/manifest.json"
     printf '%s\n' "$releases" >"$dir/meta/worlds/releases.json"
+    if ((libs)); then mkdir -p "$dir/meta/libraries" && printf '%s\n' "$libreleases" >"$dir/meta/libraries/releases.json"; fi
     for f in try/check.sh try/run.sh try/prepare.py runtime/setup.py runtime/session.py runtime/session-daemon \
-        runtime/install.py runtime/icons.py "kits/$world/kit.toml"; do
+        runtime/install.py runtime/content.py runtime/icons.py "kits/$world/kit.toml"; do
         mkdir -p "$(dirname "$dir/meta/$f")"
         fetch "$base/$f" "$dir/meta/$f"
     done
@@ -88,6 +103,7 @@ main() {
     get_core "$dir"
     get_shell "$dir"
     get_world "$dir" "$wid" "$wversion" "$wurl" "$wsha"
+    get_libraries "$dir" "$libraries"
 
     step "Writing config into $dir"
     "$dir/venv/bin/python" "$dir/meta/try/prepare.py" --folder "$dir" --kit "$dir/meta/kits/$world/kit.toml" \
@@ -163,6 +179,25 @@ get_world() {
         "$dir/meta/runtime" "$dir/downloads/world.tar.zst" "$dir/downloads/world" "$id"
     "$dir/core/bin/hyprune-world-check" "$dir/downloads/world/$id" >/dev/null
     mv "$dir/downloads/world/$id" "$worlds/$id"
+    "$dir/venv/bin/python" -I "$dir/meta/runtime/content.py" record-world --state "$dir/state/hyprune" \
+        --id "$id" --version "$version" --url "$url" --sha256 "$sha" --manifest "$worlds/$id/world.json"
+}
+
+# Libraries go where core lists user libraries ($XDG_DATA_HOME/hyprune/libraries/<id>@<version>/),
+# recorded in $XDG_STATE_HOME/hyprune/content.json as official installs.
+get_libraries() {
+    local dir=$1 id version url sha
+    while read -r id version url sha; do
+        [[ -n $id ]] || continue
+        [[ -d $dir/data/hyprune/libraries/$id@$version ]] && continue # rerun: keep it
+        step "Library: $id $version (sha256 from libraries/releases.json)"
+        fetch "$url" "$dir/downloads/library.tar.zst"
+        verify "$dir/downloads/library.tar.zst" "$sha"
+        "$dir/venv/bin/python" -I "$dir/meta/runtime/content.py" install-library --archive "$dir/downloads/library.tar.zst" \
+            --sha256 "$sha" --id "$id" --version "$version" --url "$url" \
+            --root "$dir/data/hyprune/libraries" --state "$dir/state/hyprune" >/dev/null
+        rm -f "$dir/downloads/library.tar.zst"
+    done <<<"$2"
 }
 
 write_uninstall() {

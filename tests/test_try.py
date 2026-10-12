@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'try'))
 sys.path.insert(0, str(ROOT / 'runtime'))
+sys.path.insert(0, str(ROOT / 'tests'))
 import prepare  # noqa: E402
 import install  # noqa: E402
 import session  # noqa: E402
@@ -94,6 +96,67 @@ class ScriptTests(unittest.TestCase):
             env.pop('WAYLAND_DISPLAY', None)  # also covers the stop-before-download path
             subprocess.run(['bash', str(ROOT / 'try/try.sh'), '--dry-run', '--dir', home + '/try'],
                            capture_output=True, text=True, env=env, timeout=120)
+            self.assertEqual(list(Path(home).iterdir()), [])
+
+    @unittest.skipUnless(shutil.which('zstd') and shutil.which('curl'), 'zstd and curl needed')
+    def test_try_installs_libraries_into_the_folder_data_dir(self):
+        import test_content
+        with tempfile.TemporaryDirectory() as temp:
+            temp = Path(temp)
+            release = temp / 'releases/download/street-v1.2.0'
+            release.mkdir(parents=True)
+            archive = release / f'{test_content.LIB}-1.2.0.tar.zst'
+            sha = test_content.pack(archive, test_content.library_members())
+            folder = temp / 'try'
+            (folder / 'venv/bin').mkdir(parents=True)
+            (folder / 'venv/bin/python').symlink_to(sys.executable)
+            (folder / 'meta/runtime').mkdir(parents=True)
+            shutil.copy(ROOT / 'runtime/content.py', folder / 'meta/runtime/content.py')
+            (folder / 'downloads').mkdir()
+            # try.sh's own helpers and get_libraries, without running main.
+            script = (ROOT / 'try/try.sh').read_text()
+            helpers = '\n'.join(l for l in script.splitlines() if l.startswith(('step()', 'die()', 'fetch()', 'verify()')))
+            body = script[script.index('get_libraries() {'):]
+            body = body[:body.index('\n}\n') + 3]
+            pins = f'{test_content.LIB} 1.2.0 file://{archive} {sha}'
+            run = lambda pin: subprocess.run(['bash', '-euo', 'pipefail', '-c', f'{helpers}\n{body}\nget_libraries "$1" "$2"',
+                                              'try', str(folder), pin], capture_output=True, text=True, timeout=60)
+            done = run(pins)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            library = folder / f'data/hyprune/libraries/{test_content.LIB}@1.2.0'
+            self.assertTrue((library / 'library.json').is_file())
+            record, = json.loads((folder / 'state/hyprune/content.json').read_text())['installs']
+            self.assertEqual((record['id'], record['source'], record['current']['tag']),
+                             (test_content.LIB, 'official', 'street-v1.2.0'))
+            self.assertEqual(run(pins).stdout, '')  # rerun: kept, nothing downloaded
+            shutil.rmtree(library)
+            bad = run(pins.replace(sha, '0' * 64))
+            self.assertNotEqual(bad.returncode, 0)
+            self.assertIn('sha256 mismatch', bad.stderr)
+            self.assertFalse(library.exists())
+
+    @unittest.skipUnless(shutil.which('curl'), 'curl needed')
+    def test_try_plan_lists_the_published_libraries(self):
+        # A copy of the repository whose check.sh always reports "ready", so the plan is printed.
+        with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as base:
+            for name in ['try', 'kits', 'worlds', 'libraries']:
+                shutil.copytree(ROOT / name, Path(base) / name)
+            with (Path(base) / 'try/check.sh').open('a') as check:
+                check.write('collect_checks() { MANIFEST_TEXT=$(curl -fsSL --proto "=https,file" "$MANIFEST"); '
+                            'VERDICT=ready CORE=prebuilt; }\nreport_text() { :; }\n')
+            env = {**os.environ, 'HOME': home, 'HYPRUNE_BASE': 'file://' + base}
+            run = lambda *extra: subprocess.run(['bash', str(ROOT / 'try/try.sh'), '--dry-run', '--dir', home + '/try', *extra],
+                                                capture_output=True, text=True, env=env, timeout=120)
+            plan = run()
+            self.assertEqual(plan.returncode, 0, plan.stderr)
+            pins = [r for r in json.loads((ROOT / 'libraries/releases.json').read_text()).values() if r['published']]
+            self.assertTrue(pins)
+            for pin in pins:
+                self.assertRegex(plan.stdout, rf"\n  library {re.escape(pin['id'])} {re.escape(pin['version'])}\n")
+            self.assertIn('Dry run: nothing was downloaded or written.', plan.stdout)
+            skipped = run('--no-libraries')
+            self.assertIn('  library none (--no-libraries)\n', skipped.stdout)
+            self.assertNotIn(f"library {pins[0]['id']}", skipped.stdout)
             self.assertEqual(list(Path(home).iterdir()), [])
 
 

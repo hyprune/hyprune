@@ -14,7 +14,7 @@ export XDG_CONFIG_HOME=$DIR/config XDG_STATE_HOME=$DIR/state XDG_DATA_HOME=$DIR/
 export PATH=$DIR/bin:$PATH
 export HYPRUNE_PLUGIN=$DIR/core/lib/hyprune-core.so HYPRUNE_DAEMON=$DIR/core/bin/hypruned \
     HYPRUNE_RENDERER=$DIR/core/bin/hyprune-renderer
-unset HYPRUNE_PACKAGED_WORLD_DIRS HYPRUNE_SOCKET HYPRUNE_TOKEN_FD
+unset HYPRUNE_PACKAGED_WORLD_DIRS HYPRUNE_LIBRARY_DIR HYPRUNE_SOCKET HYPRUNE_TOKEN_FD
 live() {
     HYPRUNE_LIVE_BUILD_DIR=$DIR/core/live/build/live HYPRUNE_SHELL_DIR=$DIR/shell \
         "$PY" "$DIR/core/live/dev/live/live.py" "$@"
