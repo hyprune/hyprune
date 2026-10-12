@@ -36,11 +36,11 @@
     "core": {
       "flake": false,
       "locked": {
-        "lastModified": 1791812929,
-        "narHash": "sha256-0cqrNwKI8+K12VW3MFu5t8cHSQFuBT1C6CJlaKlo7lI=",
+        "lastModified": 1791819398,
+        "narHash": "sha256-ruuyBT8/PTntQOtRSvjqGXQ92SzjSHPBz1IuyGjLy0U=",
         "owner": "hyprune",
         "repo": "core",
-        "rev": "0c9564106dda73d8689ce7c9c2bd93a6bc53030d",
+        "rev": "09abc148a0508c22de89c33df3d1d674dfdf458e",
         "type": "github"
       },
       "original": {
@@ -52,11 +52,11 @@
     "docs": {
       "flake": false,
       "locked": {
-        "lastModified": 1791808265,
-        "narHash": "sha256-bTm0fdkXb6Z4PIECB5+TNfHBrHOgkcZslZiz8fxFvyM=",
+        "lastModified": 1791819296,
+        "narHash": "sha256-+lRvb6rl6NwGxGV9a6cEKCJAkOc/OdbwSaxIQOcQ7xE=",
         "owner": "hyprune",
         "repo": "docs",
-        "rev": "4857140d7dc336eb69391c20586669bc81c065f6",
+        "rev": "578dc32159574b6e5a30e84d7fa7809dfbf6ae0e",
         "type": "github"
       },
       "original": {
@@ -478,11 +478,11 @@
     "schema": {
       "flake": false,
       "locked": {
-        "lastModified": 1791804518,
-        "narHash": "sha256-JxSiqs7LF7CgiD6VKjw2WVdfThu3W7GZineq2dDJ6Jg=",
+        "lastModified": 1791819240,
+        "narHash": "sha256-7wbjZH3zzKvsXCs3zUEeNoTK7/UcsXPkYZB4A0G9nWc=",
         "owner": "hyprune",
         "repo": "schema",
-        "rev": "ab7a2a852c9d86b5797376c06a8a150d3b7b1456",
+        "rev": "2878a5e967f44a786bcc4f6c9cc35fb5375fe1b7",
         "type": "github"
       },
       "original": {
@@ -494,11 +494,11 @@
     "sdk": {
       "flake": false,
       "locked": {
-        "lastModified": 1791804547,
-        "narHash": "sha256-hUm5Zj+6tYPKKERElMH3+PfGmZa4B1q6htGVneKAhJo=",
+        "lastModified": 1791819257,
+        "narHash": "sha256-VIuIGch2jXMjv8HOdG6Lb64fvYpJuNVDMtHp+/40NtQ=",
         "owner": "hyprune",
         "repo": "sdk",
-        "rev": "73cfa635e86fb15bc9c229f4d829bf0636deaab5",
+        "rev": "274e6d028e56febafb679b9437ed640d0bcc982b",
         "type": "github"
       },
       "original": {
@@ -510,11 +510,11 @@
     "shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1791770645,
-        "narHash": "sha256-voqcWYpkvlBDtodluNz1mX5cWsJchNYNqzkK7rqwRYU=",
+        "lastModified": 1791807806,
+        "narHash": "sha256-pSLPrk5Osrv0wpUJzSaY5759jgDT4ps93GW381ztxDA=",
         "owner": "hyprune",
         "repo": "shell",
-        "rev": "d1dd22d6f1cf775c36f7b735c42a865e59cbf3aa",
+        "rev": "c85606d136efd7ded0bb8c2c7570ac3293a5ddaa",
         "type": "github"
       },
       "original": {

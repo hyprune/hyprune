@@ -3,6 +3,18 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: core 09abc14 (v0.5.0), shell c85606d, sdk 274e6d0, schema 2878a5e, docs 578dc32 (IPC 0.23)
+
+Core v0.5.0 (the NPC stage, IPC 0.23; no new launch grant) with its prebuilt archive for
+Hyprland 0.56.2 (same ABI hash). `try/manifest.json` names core 09abc14 (prebuilt and
+source archives) and shell c85606d; the Nix packages are core 0.5.0 and SDK 0.6.0 (its
+npmDepsHash follows the lock). Schema 0.8.0; worlds unchanged (Lumen Reach 0.10.3).
+`nix flake check` passed on clean `git archive` snapshots: core CTest 42/42, shell 277
+tests (1 skipped), sdk 126 pass / 2 skipped, starter 47 tests (1 skipped). End to end on
+a headless host, inside a private KWin parent with a fresh `mktemp` HOME: `try.sh` took
+the prebuilt path and installed core 0.5.0 at 09abc14, and in the nested window the
+loaded plugin reports `hyprune-core` 0.5.0 (`hyprctl plugin list`), active in Lumen Reach.
+
 ## 2026-10-12: core 0c95641 (v0.4.0, the first prebuilt core)
 
 Core v0.4.0 ships a prebuilt archive for Hyprland 0.56.2 (`abiHash`
