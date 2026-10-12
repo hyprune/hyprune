@@ -3,6 +3,14 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: core b55058b, docs 906a19d
+
+Core b55058b (IPC 0.22, no wire change): paths draw only in the path tool, whose points
+can be aimed, dragged, inserted and removed with undo. Docs 906a19d documents it in
+RFC-0006 and the keymap. `try/manifest.json` names core b55058b with its source archive
+hash recomputed. `nix flake check` passed on clean `git archive` snapshots (core CTest
+40/40).
+
 ## 2026-10-12: core d68ac86, docs f00dde6
 
 Core d68ac86 (still IPC 0.22): home windows stay tiled on their wall (only the room
