@@ -494,11 +494,11 @@
     "sdk": {
       "flake": false,
       "locked": {
-        "lastModified": 1791769014,
-        "narHash": "sha256-0X/ciIBr4X0g5xStvBFf0RrMMK9CDq8vJI3OQ6a4Fyo=",
+        "lastModified": 1791778441,
+        "narHash": "sha256-HGApdXwEPcCJQmQFZjJlmImU3j6kz7/NAHGQhKicy2M=",
         "owner": "hyprune",
         "repo": "sdk",
-        "rev": "3a65a648be89f1311b866dba6c7218359269da77",
+        "rev": "d7fffb9fccaafb4b6e7f6ff66ff15cb9ff7501f0",
         "type": "github"
       },
       "original": {
