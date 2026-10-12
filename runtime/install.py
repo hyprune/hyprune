@@ -10,11 +10,12 @@ import re
 import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 import urllib.request
 from setup import ROOT, init, load_kit, render
+import content
+from content import extract_package
 import icons
 
 TARGET = '0.56.2'
@@ -73,40 +74,32 @@ def approved_edit(path, new, input_fn=input):
 
 
 def extract_world(archive, destination, world_id):
-    """Hash checking is the caller's job. Reject traversal, links and devices."""
-    destination = Path(destination)
-    total = 0
-    count = 0
-    with subprocess.Popen(['zstd', '-dc', str(archive)], stdout=subprocess.PIPE) as decoder:
-        try:
-            with tarfile.open(fileobj=decoder.stdout, mode='r|') as stream:
-                for member in stream:
-                    parts = Path(member.name).parts
-                    if (not parts or member.name.startswith('/') or '..' in parts or
-                            any(c in member.name for c in ['\\', '%', '?', '#', ':']) or
-                            any(p in ['', '.'] for p in member.name.rstrip('/').split('/')) or
-                            parts[0] != world_id or not (member.isdir() or member.isfile())):
-                        raise ValueError(f'Unsafe world archive member: {member.name}')
-                    total += member.size
-                    count += 1
-                    if total > 1024**3 or member.size > 128 * 1024**2 or count > 10000:
-                        raise ValueError('World archive exceeds RFC-0004 size/file limits')
-                    target = destination.joinpath(*parts)
-                    if member.isdir():
-                        target.mkdir(parents=True, exist_ok=True)
-                    else:
-                        target.parent.mkdir(parents=True, exist_ok=True)
-                        with stream.extractfile(member) as source, target.open('xb') as out:
-                            shutil.copyfileobj(source, out)
-                        target.chmod(0o644)
-        except Exception:
-            decoder.kill(); decoder.wait()
-            raise
-        if decoder.wait() != 0:
-            raise ValueError('zstd failed')
-    manifest = json.loads((destination / world_id / 'world.json').read_text())
-    if manifest['id'] != world_id:
-        raise ValueError('Archive manifest ID differs from selected world')
+    """Hash checking is the caller's job. Reject traversal, links and devices (content.extract_package)."""
+    return extract_package(archive, destination, world_id, 'world')
+
+
+def published_libraries():
+    """The published pins of libraries/releases.json (RFC-0011), in file order."""
+    return [r for r in json.loads((ROOT / 'libraries/releases.json').read_text()).values() if r['published']]
+
+
+def install_libraries(pins, root, state, receipt, fetch=urllib.request.urlretrieve):
+    """Download, verify and unpack each pin into root/<id>@<version>/ with an official record.
+
+    receipt maps the directories this installer created to their archive sha256 (for uninstall)."""
+    for pin in pins:
+        status = content.library_status(pin, root, state)
+        if status != 'install':
+            print(f"Library {pin['id']} {pin['version']}: " + {
+                'present': 'already installed', 'skipped': 'content.json records another version; kept'}[status])
+            continue
+        with tempfile.TemporaryDirectory(prefix='hyprune-library-') as temp:
+            archive = Path(temp) / 'library.tar.zst'
+            fetch(pin['url'], archive)
+            result = content.install_official_library(pin, archive, root, state)
+        print(f"Library {pin['id']} {pin['version']}: {result}")
+        if result == 'installed':
+            receipt[str(Path(root) / f"{pin['id']}@{pin['version']}")] = pin['sha256']
 
 
 def run(*argv, cwd=None):
@@ -198,7 +191,7 @@ def write_session_entry(prefix, bin_dir):
     return path
 
 
-def uninstall(args, prefix, config_dir):
+def uninstall(args, prefix, config_dir, state=None):
     receipt_path = prefix / 'receipt.json'
     if not receipt_path.exists():
         print('No script installation receipt; nothing to uninstall.')
@@ -207,6 +200,7 @@ def uninstall(args, prefix, config_dir):
     config = Path(receipt['hyprland_config']) if receipt.get('hyprland_config') else None
     if args.dry_run:
         print(f'Dry run: show/ask before removing include from {config}; remove unchanged wrappers, icons and {prefix}.')
+        print('Remove the official libraries this installer unpacked, unless they were updated since.')
         print(f'Keep user-owned {config_dir}, layouts/worlds, backups and distro dependencies.')
         return
     if config and config.exists() and INCLUDE in config.read_text():
@@ -218,6 +212,12 @@ def uninstall(args, prefix, config_dir):
             path.unlink()
         elif path.exists():
             print(f'Preserving edited file: {path}')
+    state = Path(state) if state else content.state_home() / 'hyprune'
+    for name, sha256 in receipt.get('libraries', {}).items():
+        if content.remove_official_library(name, sha256, state):
+            print(f'Removed library {name}')
+        elif Path(name).exists():
+            print(f'Preserving library {name}: its install record changed since this installer added it')
     backup = prefix.with_name(f'install.uninstalled-{time.time_ns()}')
     prefix.rename(backup)
     print(f'Installation moved to {backup} (rollback backup).')
@@ -247,6 +247,7 @@ def main():
     parser.add_argument('--world-sha256', action='append', default=[], metavar='NAME=SHA256')
     parser.add_argument('--hyprland-config', help='Optional Lua config to extend, after diff and confirmation')
     parser.add_argument('--skip-deps', action='store_true', help='Use already installed dependencies')
+    parser.add_argument('--no-libraries', action='store_true', help='Skip the pinned official object libraries')
     parser.add_argument('--jobs', type=int, default=3)
     args = parser.parse_args()
     if args.jobs < 1:
@@ -255,12 +256,15 @@ def main():
     config_dir = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'hyprune'
     bin_dir = Path.home() / '.local/bin'
     icon_dir = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'icons'
+    library_root = content.data_home() / 'hyprune/libraries'
+    state = content.state_home() / 'hyprune'
     if args.uninstall:
         uninstall(args, prefix, config_dir)
         return
     kit_path = Path(args.kit_file or ROOT / f'kits/{args.kit}/kit.toml').resolve()
     kit = load_kit(kit_path)
     releases = json.loads((ROOT / 'worlds/releases.json').read_text())
+    library_pins = [] if args.no_libraries else published_libraries()
     packages = dict(x.split('=', 1) for x in args.world_package)
     hashes = dict(x.split('=', 1) for x in args.world_sha256)
     os_release = Path('/etc/os-release').read_text() if Path('/etc/os-release').exists() else ''
@@ -288,6 +292,11 @@ def main():
     print('Build core with matching pkg-config headers (hyprpm manifest proposal: proposals/hyprpm.toml).')
     print('Install shell in a Python venv, Quickshell wrapper, SDK CLI; verify and unpack data-only worlds.')
     print(f'Generate once: {config_dir}; backup/refuse replacement of existing files.')
+    if library_pins:
+        print('Libraries: ' + ', '.join(f"{r['id']} {r['version']}" for r in library_pins) +
+              f' into {library_root} (sha256-checked; records in {state}/content.json)')
+    else:
+        print('Libraries: none' + (' (--no-libraries)' if args.no_libraries else ''))
     print(f'App icons: {icon_dir}/hicolor; login-screen entry: {prefix}/share/wayland-sessions (copy with sudo yourself).')
     print('Hyprland configuration is optional: --hyprland-config PATH shows a diff and asks.')
     for blocker in blockers:
@@ -363,9 +372,13 @@ def main():
             if digest(archive) != expected:
                 raise RuntimeError(f'{name}: archive SHA256 mismatch')
             stage = Path(temp) / 'unpacked'; stage.mkdir()
-            extract_world(archive, stage, r['id'])
+            manifest = extract_world(archive, stage, r['id'])
             run(generation / 'bin/hyprune-world-check', stage / r['id'])
             shutil.copytree(stage / r['id'], target)
+            if expected == r['sha256']:  # the pinned release, not a local development archive
+                content.record_official_world(state, r, manifest)
+    installed_libraries = dict(previous.get('libraries', {}))
+    install_libraries(library_pins, library_root, state, installed_libraries)
     world_dirs = [data_worlds]
     with tempfile.TemporaryDirectory() as temp:
         render(argparse.Namespace(kit=kit_path, output=temp, plugin=generation / 'lib/hyprune-core.so',
@@ -410,7 +423,8 @@ def main():
         old = config.read_text() if config.exists() else ''
         if INCLUDE in old or approved_edit(config, old + ('\n' if old and not old.endswith('\n') else '') + INCLUDE):
             configured = str(config)
-    receipt = dict(wrappers=wrappers, icons=installed_icons, generation=str(generation), hyprland_config=configured)
+    receipt = dict(wrappers=wrappers, icons=installed_icons, libraries=installed_libraries, generation=str(generation),
+                   hyprland_config=configured)
     receipt_file = prefix / 'receipt.json'
     receipt_data = json.dumps(receipt, indent=2) + '\n'
     if not receipt_file.exists() or receipt_file.read_text() != receipt_data:
