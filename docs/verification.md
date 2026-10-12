@@ -3,6 +3,18 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: core 0c95641 (v0.4.0, the first prebuilt core)
+
+Core v0.4.0 ships a prebuilt archive for Hyprland 0.56.2 (`abiHash`
+`efb50993…_aq_0.15_hu_0.14_hg_0.5_hc_0.1_hlg_0.6`). `try/manifest.json` names it
+(`coreVersion`, `corePrebuiltUrl`, `corePrebuiltSha256`) and keeps the source archive of
+0c95641 for other ABIs; the Nix core package is version 0.4.0. `nix flake check` passed
+on clean `git archive` snapshots (core CTest 40/40, starter 47 tests). End to end on a
+headless host, inside a private KWin parent with an empty HOME: `try.sh` took the
+prebuilt path (about 7 s, no build log), installed core 0.4.0 at 0c95641 with the
+matching ABI and Lumen Reach 0.10.3, and `run` brought up the nested 1600x900 window in
+the world (the plugin active at the arrival spawn, the shell's HUD on screen).
+
 ## 2026-10-12: worlds d155516, schema ab7a2a8, sdk 73cfa63, docs 4857140; Lumen Reach 0.10.3
 
 Lumen Reach 0.10.3 (plain Sun Court paving) replaces 0.10.2 in `worlds/releases.json`.
