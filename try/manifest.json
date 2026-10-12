@@ -1,6 +1,6 @@
 {
   "manifest": 1,
-  "tryVersion": "0.1.1",
+  "tryVersion": "0.1.2",
   "hyprland": "0.56.2",
   "hyprlandAbi": "efb50993780079460b0cbed1363e2166a2de1d9f_aq_0.15_hu_0.14_hg_0.5_hc_0.1_hlg_0.6",
   "hyprlandArchPackage": "hyprland-0.56.2-4",

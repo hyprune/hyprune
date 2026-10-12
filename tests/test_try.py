@@ -66,6 +66,19 @@ class ScriptTests(unittest.TestCase):
             if check['status'] == 'fail':
                 self.assertTrue(check['fix'], check)
 
+    def test_check_reads_the_gles_version(self):
+        # eglinfo's line is "OpenGL ES profile version: OpenGL ES 3.2 ..."; the version is the second match.
+        with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as bin_dir:
+            fake = Path(bin_dir) / 'eglinfo'
+            fake.write_text('#!/bin/sh\necho "OpenGL ES profile renderer: Test GPU"\n'
+                            'echo "OpenGL ES profile version: OpenGL ES 3.2 Test 1.0"\n')
+            fake.chmod(0o755)
+            env = {**os.environ, 'HOME': home, 'PATH': f"{bin_dir}:{os.environ['PATH']}"}
+            out = subprocess.run(['bash', str(ROOT / 'try/check.sh'), '--json', '--manifest', str(ROOT / 'try/manifest.json')],
+                                 capture_output=True, text=True, env=env, timeout=60)
+        egl = next(c for c in json.loads(out.stdout)['checks'] if c['id'] == 'egl')
+        self.assertEqual((egl['status'], egl['detail']), ('ok', 'OpenGL ES 3.2, Test GPU'))
+
     def test_try_dry_run_writes_nothing(self):
         with tempfile.TemporaryDirectory() as home:
             env = {**os.environ, 'HOME': home, 'HYPRUNE_BASE': 'file://' + str(ROOT)}

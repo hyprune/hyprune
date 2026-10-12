@@ -234,11 +234,11 @@ check_gpu() {
         local egl
         egl=$("${nocache[@]}" eglinfo -B 2>/dev/null)
         line=$(grep -m1 'OpenGL ES profile version' <<<"$egl")
-        es=$(grep -o 'OpenGL ES [0-9.]*' <<<"$line" | head -1)
+        es=$(grep -o 'OpenGL ES [0-9][0-9.]*' <<<"$line" | head -1)
         renderer=$(grep -m1 'OpenGL ES profile renderer' <<<"$egl" | sed 's/.*renderer: *//')
     elif have python3; then
         line=$("${nocache[@]}" python3 -I -c "$GL_PROBE" 2>/dev/null)
-        es=$(grep -o 'OpenGL ES [0-9.]*' <<<"$line" | head -1)
+        es=$(grep -o 'OpenGL ES [0-9][0-9.]*' <<<"$line" | head -1)
         renderer=${line#*|}
     fi
     es=${es#OpenGL ES }
