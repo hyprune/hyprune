@@ -32,7 +32,7 @@ let
       python3 tests/fixtures/climbing.py
     '';
     cmakeFlags = [ "-DBUILD_TESTING=ON" ];
-    nativeCheckInputs = [ pkgs.mesa ];
+    nativeCheckInputs = [ pkgs.mesa pkgs.zstd ]; # zstd: the catalog test packs .tar.zst fixtures
     doCheck = true;
     checkPhase = ''
       runHook preCheck
