@@ -6,8 +6,9 @@
 #    the install commands and stops: it never runs a package manager or sudo.
 # 2. Downloads into ONE folder (default ~/hyprune-try), checking every sha256:
 #    core built for your Hyprland (or builds it there from source), the shell
-#    with a private Python venv (hash-pinned packages), the world release and
-#    the published official object libraries (--no-libraries skips them).
+#    with a private Python venv (hash-pinned packages), the world release, the
+#    published official object libraries (--no-libraries skips them) and, with
+#    Node.js, the hyprune CLI (npm packages pinned by the SDK's lockfile).
 # 3. Writes DIR/run and DIR/uninstall. Config, state and caches stay in DIR:
 #    no login items, session entries, config edits or files elsewhere.
 # 4. Starts DIR/run: a nested Hyprland window inside your current session.
@@ -76,6 +77,8 @@ for r in json.loads(sys.argv[1]).values():
     if [[ $CORE == prebuilt ]]; then echo "  core    prebuilt $(manifest_get coreVersion) for Hyprland $(manifest_get hyprland)"
     else echo "  core    hyprune/core@$(manifest_get coreRev | cut -c1-7), built from source here (5-15 minutes)"; fi
     echo "  shell   hyprune/shell@$(manifest_get shellRev | cut -c1-7) and a private Python venv (hash-pinned packages from PyPI)"
+    if node_ok; then echo "  cli     hyprune/sdk@$(manifest_get sdkRev | cut -c1-7): the hyprune command (npm packages pinned by its lockfile)"
+    else echo "  cli     skipped: needs Node.js $(manifest_get node)+ and npm (the Director's Library page uses it)"; fi
     echo "  world   $wid $wversion"
     local lid lversion
     while read -r lid lversion _; do [[ -n $lid ]] && echo "  library $lid $lversion"; done <<<"$libraries"
@@ -102,6 +105,7 @@ for r in json.loads(sys.argv[1]).values():
 
     get_core "$dir"
     get_shell "$dir"
+    get_cli "$dir"
     get_world "$dir" "$wid" "$wversion" "$wurl" "$wsha"
     get_libraries "$dir" "$libraries"
 
@@ -116,6 +120,7 @@ for r in json.loads(sys.argv[1]).values():
     echo "  start      $dir/run          (nested window; --size 1280x720 for a smaller one)"
     echo "  live       $dir/run --live   (your running Hyprland, this login only; undo: --stop)"
     echo "  uninstall  $dir/uninstall    (deletes the folder; nothing else to undo)"
+    if [[ -x $dir/bin/hyprune ]]; then echo "  cli        $dir/bin/hyprune  (on PATH inside the session)"; fi
     if ((run)) && [[ -t 1 && -e /dev/tty ]]; then
         if ((live)); then exec "$dir/run" --live </dev/tty; else exec "$dir/run" </dev/null; fi
     fi
@@ -164,6 +169,29 @@ get_shell() {
     "$dir/venv/bin/pip" install --quiet --no-cache-dir --disable-pip-version-check --require-hashes -r "$dir/shell/requirements.txt"
     printf '#!/bin/sh\nexec "%s/venv/bin/python" "%s/shell/bridge/launch.py" "$@"\n' "$dir" "$dir" >"$dir/bin/hyprune-shell"
     chmod 755 "$dir/bin/hyprune-shell"
+}
+
+# The SDK's hyprune CLI, which the Director's Library page runs. Optional: without Node.js
+# (or if it fails to build) everything else works.
+get_cli() {
+    local dir=$1
+    node_ok || return 0
+    step "CLI: hyprune/sdk@$(manifest_get sdkRev | cut -c1-7) (log: $dir/sdk.log)"
+    fetch "$(manifest_get sdkUrl)" "$dir/downloads/sdk.tar.gz"
+    verify "$dir/downloads/sdk.tar.gz" "$(manifest_get sdkSha256)"
+    rm -rf "$dir/sdk" "$dir/bin/hyprune"
+    mkdir "$dir/sdk"
+    tar -C "$dir/sdk" --strip-components=1 -xzf "$dir/downloads/sdk.tar.gz"
+    # npm verifies every package against the lockfile; no install scripts; its cache stays in downloads/.
+    if (cd "$dir/sdk" && export npm_config_cache=$dir/downloads/npm &&
+        npm ci --ignore-scripts --no-audit --no-fund && npm run build) >"$dir/sdk.log" 2>&1; then
+        printf '#!/bin/sh\nexec node "%s/sdk/dist/src/cli.js" "$@"\n' "$dir" >"$dir/bin/hyprune"
+        chmod 755 "$dir/bin/hyprune"
+    else
+        tail -5 "$dir/sdk.log"
+        echo "  note: the hyprune CLI did not build (log: $dir/sdk.log); everything else works without it"
+        rm -rf "$dir/sdk"
+    fi
 }
 
 get_world() {

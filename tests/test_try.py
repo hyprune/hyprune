@@ -40,7 +40,11 @@ class ManifestTests(unittest.TestCase):
         self.assertIn(MANIFEST['shellRev'], MANIFEST['shellUrl'])
         self.assertEqual(MANIFEST['coreRev'], pins['core']['rev'])
         self.assertIn(MANIFEST['coreRev'], MANIFEST['coreSourceUrl'])
-        for key in ['shellSha256', 'coreSourceSha256']:
+        # The hyprune CLI (the Director's Library page runs it) is the pinned SDK.
+        self.assertEqual(MANIFEST['sdkRev'], pins['sdk']['rev'])
+        self.assertEqual(MANIFEST['sdkUrl'], f"https://github.com/hyprune/sdk/archive/{pins['sdk']['rev']}.tar.gz")
+        self.assertRegex(MANIFEST['node'], r'^\d+\.\d+$')
+        for key in ['shellSha256', 'coreSourceSha256', 'sdkSha256']:
             self.assertRegex(MANIFEST[key], HEX)
         if MANIFEST['corePrebuiltUrl']:
             self.assertRegex(MANIFEST['corePrebuiltSha256'], HEX)
@@ -136,6 +140,55 @@ class ScriptTests(unittest.TestCase):
             self.assertFalse(library.exists())
 
     @unittest.skipUnless(shutil.which('curl'), 'curl needed')
+    def test_try_cli_is_built_from_the_pinned_sdk_and_optional(self):
+        with tempfile.TemporaryDirectory() as temp:
+            temp = Path(temp)
+            source = temp / 'src/sdk-rev'
+            (source / 'scripts').mkdir(parents=True)
+            (source / 'package.json').write_text('{}')
+            archive = temp / 'sdk.tar.gz'
+            subprocess.run(['tar', '-C', str(temp / 'src'), '-czf', str(archive), 'sdk-rev'], check=True)
+            sha = subprocess.run(['sha256sum', str(archive)], capture_output=True, text=True).stdout.split()[0]
+            fake = temp / 'fake-bin'; fake.mkdir()
+            (fake / 'node').write_text('#!/bin/sh\n[ "$1" = --version ] && echo v22.12.0 && exit 0\necho "node $*"\n')
+            # npm ci must keep its cache in the folder; build writes the CLI entry point.
+            (fake / 'npm').write_text('#!/bin/sh\necho "npm $* cache=$npm_config_cache" >> "$NPM_LOG"\n'
+                                      '[ -n "$NPM_FAIL" ] && exit 1\n'
+                                      '[ "$1" = run ] && mkdir -p dist/src && echo cli > dist/src/cli.js\nexit 0\n')
+            for tool in ['node', 'npm']:
+                (fake / tool).chmod(0o755)
+            folder = temp / 'try'
+            for sub in ['bin', 'downloads']:
+                (folder / sub).mkdir(parents=True)
+            script = (ROOT / 'try/try.sh').read_text()
+            helpers = '\n'.join(l for l in script.splitlines() if l.startswith(('step()', 'die()', 'fetch()', 'verify()')))
+            body = script[script.index('get_cli() {'):]
+            body = body[:body.index('\n}\n') + 3]
+            manifest = '\n'.join(['{', f'  "sdkRev": "{"a" * 40}",', f'  "sdkUrl": "file://{archive}",',
+                                   f'  "sdkSha256": "{sha}",', '  "node": "22.12"', '}'])
+            log = temp / 'npm.log'
+            run = lambda **env: subprocess.run(
+                ['bash', '-euo', 'pipefail', '-c', f'HYPRUNE_CHECK_LIB=1 source {ROOT}/try/check.sh\n{helpers}\n{body}\n'
+                 'MANIFEST_TEXT=$(<"$2"); get_cli "$1"', 'try', str(folder), str(temp / 'manifest.json')],
+                capture_output=True, text=True, timeout=60,
+                env={**os.environ, 'PATH': f"{fake}:{os.environ['PATH']}", 'NPM_LOG': str(log), **env})
+            (temp / 'manifest.json').write_text(manifest)
+            done = run()
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual((folder / 'bin/hyprune').read_text(), f'#!/bin/sh\nexec node "{folder}/sdk/dist/src/cli.js" "$@"\n')
+            self.assertEqual(log.read_text().splitlines(), [
+                f'npm ci --ignore-scripts --no-audit --no-fund cache={folder}/downloads/npm',
+                f'npm run build cache={folder}/downloads/npm'])
+            failed = run(NPM_FAIL='1')
+            self.assertEqual(failed.returncode, 0, failed.stderr)
+            self.assertIn('the hyprune CLI did not build', failed.stdout)
+            self.assertFalse((folder / 'bin/hyprune').exists())
+            self.assertFalse((folder / 'sdk').exists())
+            (temp / 'manifest.json').write_text(manifest.replace('"22.12"', '"99.0"'))
+            skipped = run()
+            self.assertEqual((skipped.returncode, skipped.stdout), (0, ''))
+
+    @unittest.skipUnless(shutil.which('curl'), 'curl needed')
     def test_try_plan_lists_the_published_libraries(self):
         # A copy of the repository whose check.sh always reports "ready", so the plan is printed.
         with tempfile.TemporaryDirectory() as home, tempfile.TemporaryDirectory() as base:
@@ -154,6 +207,7 @@ class ScriptTests(unittest.TestCase):
             for pin in pins:
                 self.assertRegex(plan.stdout, rf"\n  library {re.escape(pin['id'])} {re.escape(pin['version'])}\n")
             self.assertIn('Dry run: nothing was downloaded or written.', plan.stdout)
+            self.assertRegex(plan.stdout, r'\n  cli     (hyprune/sdk@[0-9a-f]{7}: the hyprune command|skipped: needs Node\.js)')
             skipped = run('--no-libraries')
             self.assertIn('  library none (--no-libraries)\n', skipped.stdout)
             self.assertNotIn(f"library {pins[0]['id']}", skipped.stdout)

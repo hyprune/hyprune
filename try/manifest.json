@@ -15,7 +15,11 @@
   "shellRev": "bc3d3cb62fafbd1020ace0dd4bf33de31c30aac0",
   "shellUrl": "https://github.com/hyprune/shell/archive/bc3d3cb62fafbd1020ace0dd4bf33de31c30aac0.tar.gz",
   "shellSha256": "8ed4f2b51f0efc2ba4928523e0b76bcfe7d3a9e20929465cd1b48e88218624ad",
+  "sdkRev": "501eabd7627d4faf63522e3e4cc17d4a29acb944",
+  "sdkUrl": "https://github.com/hyprune/sdk/archive/501eabd7627d4faf63522e3e4cc17d4a29acb944.tar.gz",
+  "sdkSha256": "8007efcbcdf9551009e24ee079c261771c32c91aa6441b6fc8fbd8b05c83ee27",
+  "node": "22.12",
   "world": "lumen-reach",
-  "diskMiB": 600,
+  "diskMiB": 650,
   "diskSourceMiB": 2500
 }

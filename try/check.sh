@@ -39,6 +39,8 @@ add() { # add ok|note|fail ID "Label" "detail" ["fix command"]
     STATES+=("$1") IDS+=("$2") LABELS+=("$3") DETAILS+=("$4") FIXES+=("${5:-}")
 }
 have() { command -v "$1" >/dev/null 2>&1; }
+# The hyprune CLI (SDK) needs Node.js at the manifest's version and npm.
+node_ok() { have node && have npm && version_ge "$(node --version 2>/dev/null | tr -d v)" "$(manifest_get node)"; }
 # Version comparison: version_ge 3.12.1 3.11
 version_ge() { [[ $(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1) == "$2" ]]; }
 # One "key": value per line in the manifest; plain bash, no sed/awk needed.
@@ -298,6 +300,9 @@ check_tools() {
     else
         add ok tools "Download tools" "curl, tar, zstd, sha256sum"
     fi
+    want=$(manifest_get node)
+    if node_ok; then add ok node "Node.js" "$(node --version) (the hyprune CLI, for the Director's Library page)"
+    else add note node "Node.js" "$(node --version 2>/dev/null || echo 'not installed')$(have npm || echo ', no npm'); need ${want:-22.12}+ and npm for the hyprune CLI (the Director's Library page); everything else works" "$(install_cmd nodejs npm)"; fi
     if have kitty; then add ok terminal "Terminal" "kitty (desk terminals in the world)"
     else add note terminal "Terminal" "kitty not found: the world's desk terminals stay empty" "$(install_cmd kitty)"; fi
 }
