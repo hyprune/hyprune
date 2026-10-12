@@ -3,6 +3,14 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-12: sdk 3fe9393 (@hyprune/sdk 0.6.1)
+
+SDK 0.6.1: the client holds the hello from its response frame, so an event that core
+writes right behind it (in the same read) no longer drops the connection. The Nix SDK
+package is version 0.6.1; its npmDepsHash follows the lock (the lock's own version field
+changed it). `nix flake check` passed on clean `git archive` snapshots of the pinned
+revisions.
+
 ## 2026-10-12: core 09abc14 (v0.5.0), shell c85606d, sdk 274e6d0, schema 2878a5e, docs 578dc32 (IPC 0.23)
 
 Core v0.5.0 (the NPC stage, IPC 0.23; no new launch grant) with its prebuilt archive for
