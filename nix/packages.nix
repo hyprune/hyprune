@@ -46,7 +46,7 @@ let
     installPhase = ''
       mkdir -p $out/lib $out/bin $out/share/hyprune
       cp hyprune-core.so $out/lib/hyprune-core.so
-      cp hypruned hyprune-renderer hyprune-world-check $out/bin/
+      cp hypruned hyprune-renderer hyprune-world-check hyprune-object-check $out/bin/
       cp ../config/input.default.json $out/share/hyprune/input.default.json
       # Machines: the data.publish source helper (hyprune-session starts it for
       # sources.json from <prefix>/libexec, beside lib/) and the system gauge script.
@@ -118,6 +118,21 @@ let
     '';
     meta = { license = lib.licenses.cc-by-40; platforms = lib.platforms.linux; };
   };
+  # Official object libraries as read-only system libraries (RFC-0011, RFC-0015): each output
+  # is a library root, $out/share/hyprune/libraries/<id>@<version>/, for HYPRUNE_LIBRARY_DIR.
+  # Core skips symlinked entries, so point at these outputs, never at a symlinked profile.
+  # Same extractor, limits and data-only rules as the installer.
+  libraryPins = import ./library-pins.nix { inherit lib; };
+  releaseLibrary = r: pkgs.runCommand "hyprune-library-${r.id}-${r.version}" {
+    src = pkgs.fetchurl { inherit (r) url; hash = r.nixHash; };
+    nativeBuildInputs = [ pkgs.python3 pkgs.zstd ];
+    passthru = { inherit (r) id version formatVersion; };
+    meta = { license = lib.licenses.cc-by-40; platforms = lib.platforms.all; };
+  } ''
+    python3 -I ${../runtime/content.py} unpack-library --archive "$src" --id ${r.id} --version ${r.version} \
+      --out "$out/share/hyprune/libraries"
+  '';
+  libraries = lib.mapAttrs (_: releaseLibrary) libraryPins;
   world-minimal = pkgs.runCommand "hyprune-world-minimal-0.1.0" {} ''
     mkdir -p $out/share/hyprune/worlds/com.hyprune.minimal
     cp ${../worlds/minimal}/* $out/share/hyprune/worlds/com.hyprune.minimal/
@@ -149,7 +164,7 @@ let
   # Config, state and caches live in one folder (default ~/hyprune-try-nix).
   try = pkgs.writeShellApplication {
     name = "hyprune-try";
-    runtimeInputs = [ python hyprland shell pkgs.kitty pkgs.btop pkgs.coreutils ];
+    runtimeInputs = [ python hyprland shell sdk pkgs.kitty pkgs.btop pkgs.coreutils ];
     text = ''
       dir=''${HYPRUNE_TRY_DIR:-$HOME/hyprune-try-nix}
       while (($#)); do
@@ -167,6 +182,7 @@ let
       [[ -d $dir/data/hyprune/worlds/${releases.lumen-reach.id} ]] ||
         cp -r --no-preserve=mode "$world" "$dir/data/hyprune/worlds/"
       export XDG_CONFIG_HOME=$dir/config XDG_STATE_HOME=$dir/state XDG_DATA_HOME=$dir/data XDG_CACHE_HOME=$dir/cache
+      export HYPRUNE_LIBRARY_DIR=${lib.concatMapStringsSep ":" (l: "${l}/share/hyprune/libraries") (lib.attrValues libraries)}
       python3 ${starter}/share/hyprune/try/prepare.py --folder "$dir" --kit ${starter}/share/hyprune/kits/lumen-reach/kit.toml \
         --plugin ${core}/lib/hyprune-core.so --input-default ${core}/share/hyprune/input.default.json
       # Outside NixOS there is no /run/opengl-driver: use this Mesa (Intel, AMD, nouveau).
@@ -186,7 +202,7 @@ let
         --hyprland ${hyprland}/bin/Hyprland
     '';
   };
-in lib.mapAttrs' (name: _: lib.nameValuePair "world-${name}" (releaseWorld name)) releases // {
+in lib.mapAttrs' (name: _: lib.nameValuePair "world-${name}" (releaseWorld name)) releases // libraries // {
   inherit core shell sdk starter world-minimal hyprland try;
   default = pkgs.symlinkJoin {
     name = "hyprune-minimal";

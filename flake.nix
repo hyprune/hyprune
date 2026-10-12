@@ -41,11 +41,12 @@
       checks = each (system: let
         pkgs = pkgsFor system; p = self.packages.${system};
         releases = builtins.fromJSON (builtins.readFile ./worlds/releases.json);
+        libraryPins = import ./nix/library-pins.nix { inherit (pkgs) lib; };
         catalogPython = pkgs.python3.withPackages (ps: [ ps.jsonschema ps.referencing ]);
       in {
         inherit (p) core shell sdk starter;
         contracts = pkgs.runCommand "hyprune-starter-checks" {
-          nativeBuildInputs = [ pkgs.python3 pkgs.shellcheck pkgs.zstd pkgs.git ];
+          nativeBuildInputs = [ pkgs.python3 pkgs.shellcheck pkgs.zstd pkgs.git pkgs.curl ];
         } ''
           cp -r ${self} source; chmod -R u+w source; cd source
           export PYTHONDONTWRITEBYTECODE=1
@@ -72,6 +73,17 @@
             python3 ${self}/scripts/check-world-formats.py --shell ${p.shell}/share/hyprune-shell --validate \
               ${self}/worlds/releases.json $world/world.json >> $out
           '') (builtins.attrNames releases));
+        # Pinned libraries as unpacked for HYPRUNE_LIBRARY_DIR: core's catalog rules (the library
+        # and every object ready), the SDK's library check, and the recorded formatVersion.
+        release-libraries = pkgs.runCommand "hyprune-release-library-check" { nativeBuildInputs = [ pkgs.python3 ]; } (
+          pkgs.lib.concatMapStrings (name: let r = libraryPins.${name}; in ''
+            library=${p.${name}}/share/hyprune/libraries/${r.id}@${r.version}
+            ${p.core}/bin/hyprune-object-check --library $library > /dev/null
+            ${p.sdk}/bin/hyprune library check $library > /dev/null
+            python3 -c 'import json,sys; v=json.load(open(sys.argv[1]))["formatVersion"]; sys.exit(None if v==sys.argv[2] else f"{sys.argv[1]}: formatVersion {v}, releases.json says {sys.argv[2]}")' \
+              $library/library.json ${r.formatVersion}
+            echo $library >> $out
+          '') (builtins.attrNames libraryPins));
         minimal-world = pkgs.runCommand "hyprune-minimal-world-check" {} ''
           ${p.core}/bin/hyprune-world-check ${p.world-minimal}/share/hyprune/worlds/com.hyprune.minimal > $out
         '';

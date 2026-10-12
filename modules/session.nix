@@ -9,6 +9,10 @@ let
     dev = [ "switchyard" "minimal" ];
   }.${cfg.kit}) ++ cfg.worlds);
   worlds = map (n: p.${"world-${n}"}) names;
+  # Read-only system libraries (RFC-0011): each entry is a library root holding <id>@<version>/.
+  libraryDirs = pkgs.lib.optionals cfg.libraries.pinned
+    (map (n: "${p.${n}}/share/hyprune/libraries") (builtins.attrNames (import ../nix/library-pins.nix { inherit (pkgs) lib; })))
+    ++ map toString cfg.libraries.extra;
   settings = pkgs.writeText "hyprune-settings.json" (builtins.toJSON cfg.settings);
   seed = pkgs.runCommand "hyprune-${cfg.kit}-seed" { nativeBuildInputs = [ pkgs.python3 ]; } ''
     python3 ${self}/runtime/setup.py render --kit ${self}/kits/${cfg.kit}/kit.toml \
@@ -28,6 +32,7 @@ let
       rm $out/bin/Hyprland
       makeWrapper ${p.starter}/bin/hyprune-session $out/bin/Hyprland \
         --set HYPRUNE_PACKAGED_WORLD_DIRS '${builtins.toJSON (map (w: "${w}/share/hyprune/worlds") worlds)}' \
+        ${pkgs.lib.optionalString (libraryDirs != []) "--prefix HYPRUNE_LIBRARY_DIR : ${pkgs.lib.escapeShellArg (pkgs.lib.concatStringsSep ":" libraryDirs)}"} \
         --add-flags "--seed ${seed} --hyprland ${hyprland}/bin/Hyprland ${pkgs.lib.optionalString homeManager "--prefer-user-config"}"
       mkdir -p $out/share/wayland-sessions
       cat > $out/share/wayland-sessions/hyprune.desktop <<EOF
@@ -42,11 +47,12 @@ let
     '';
     passthru = {
       providedSessions = [ "hyprune" ];
+      inherit libraryDirs;
       unwrapped = hyprland;
     };
     meta.mainProgram = "Hyprland";
   }) {};
 in {
-  inherit seed session hyprland;
+  inherit seed session hyprland libraryDirs;
   packages = [ p.core p.shell p.sdk p.starter pkgs.kitty pkgs.btop ] ++ worlds;
 }
