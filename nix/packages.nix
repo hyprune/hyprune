@@ -9,7 +9,7 @@ let
   shellTestPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing p.numpy p.pillow ]);
   core = hyprland.stdenv.mkDerivation {
     pname = "hyprune-core";
-    version = "0.7.2";
+    version = "0.8.0";
     src = inputs.core;
     nativeBuildInputs = (with pkgs; [ cmake ninja pkg-config wayland-scanner ]) ++ [ testPython ];
     # meshoptimizer, basisu/zstd (KTX2) and FidelityFX FSR 1 are vendored in
@@ -96,8 +96,8 @@ let
     meta.license = lib.licenses.mit;
   };
   sdk = pkgs.buildNpmPackage {
-    pname = "hyprune-sdk"; version = "0.9.0"; src = inputs.sdk;
-    npmDepsHash = "sha256-0EDhD8Mes42quuNLdRnsJ1uAZmc38tpD4ftow70VTkQ=";
+    pname = "hyprune-sdk"; version = "0.10.0"; src = inputs.sdk;
+    npmDepsHash = "sha256-VycsSdukRxrqxzmASMtIbzLuhgHYw3T/eX/KJQAofUg=";
     nodejs = pkgs.nodejs_24;
     npmFlags = [ "--ignore-scripts" ];
     npmBuildScript = "build";

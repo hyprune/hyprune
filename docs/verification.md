@@ -3,6 +3,23 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-13: core d3780e0 (v0.8.0), shell bc5d217, sdk 8d394be (0.10.0), schema 86fa42d (0.12.0), docs 7eeabec (IPC 0.26)
+
+Core v0.8.0 (IPC 0.26: the debug tool on the wire, the companion's pace, whole pocket lists)
+with its prebuilt archive for Hyprland 0.56.2 (sha256 `44951420...f34fb9472`, checked against
+the release's `.sha256`; `abi.json` is byte-for-byte the v0.7.2 one). `try/manifest.json`
+names core d3780e0 (prebuilt and source archives), shell bc5d217 and sdk 8d394be. The Nix
+core package is 0.8.0 and the SDK package 0.10.0 (new `npmDepsHash`). worlds 6bb6420 and
+the world and library records are unchanged; `try.sh`, `check.sh` and `install.py` did not
+change, so try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots (core CTest, shell tests, SDK 188
+tests with 2 skipped, starter 81 tests with 1 skipped). The meta tests pass (81). End to end
+on a headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh` took
+the prebuilt path in 15 s; in the nested window the plugin reports `hyprune-core` 0.8.0, the
+player walked 8 m, run exited 0, and after uninstall HOME and the runtime directory were
+unchanged.
+
 ## 2026-10-13: Lumen Reach 0.11.1; worlds 6bb6420, docs 26591a5
 
 `worlds/releases.json` pins Lumen Reach 0.11.1 (world format 0.9; fixes from live
