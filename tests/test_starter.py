@@ -275,7 +275,8 @@ class InstallTests(unittest.TestCase):
     def test_generation_installs_the_source_helper_beside_the_plugin(self):
         with tempfile.TemporaryDirectory() as temp:
             core, generation = Path(temp) / 'core', Path(temp) / 'generation'
-            for name in ['dev/machines/source-helper.py', 'dev/machines/scripts/system-gauges.py']:
+            for name in ['dev/machines/source-helper.py', 'dev/machines/scripts/system-gauges.py',
+                         'dev/machines/scripts/demo-source.py']:
                 (core / name).parent.mkdir(parents=True, exist_ok=True)
                 (core / name).write_text('#!/usr/bin/env python3\n')
             install.install_machines(core, generation)
@@ -285,6 +286,9 @@ class InstallTests(unittest.TestCase):
             gauges = generation / 'bin/hyprune-system-gauges'
             self.assertEqual(gauges.resolve(), (generation / 'share/hyprune/machines/system-gauges.py').resolve())
             self.assertTrue(os.access(gauges, os.X_OK))
+            demo = generation / 'bin/hyprune-demo-source'
+            self.assertEqual(demo.resolve(), (generation / 'share/hyprune/machines/demo-source.py').resolve())
+            self.assertTrue(os.access(demo, os.X_OK))
 
 
 class WorldFormatTests(unittest.TestCase):

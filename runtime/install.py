@@ -226,15 +226,18 @@ def uninstall(args, prefix, config_dir, state=None):
 
 
 def install_machines(core, prefix):
-    """Core's source helper and system gauge script, in the layout of its release archive:
-    hyprune-session finds libexec/hyprune/source-helper beside lib/hyprune-core.so."""
+    """Core's source helper, system gauge script and demo source (a newly placed machine's
+    first source), in the layout of its release archive: hyprune-session finds
+    libexec/hyprune/source-helper beside lib/hyprune-core.so."""
     for source, target in [('dev/machines/source-helper.py', 'libexec/hyprune/source-helper'),
-                           ('dev/machines/scripts/system-gauges.py', 'share/hyprune/machines/system-gauges.py')]:
+                           ('dev/machines/scripts/system-gauges.py', 'share/hyprune/machines/system-gauges.py'),
+                           ('dev/machines/scripts/demo-source.py', 'share/hyprune/machines/demo-source.py')]:
         (prefix / target).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(core / source, prefix / target)
         (prefix / target).chmod(0o755)
     (prefix / 'bin').mkdir(exist_ok=True)
-    (prefix / 'bin/hyprune-system-gauges').symlink_to('../share/hyprune/machines/system-gauges.py')
+    for name in ['system-gauges', 'demo-source']:
+        (prefix / f'bin/hyprune-{name}').symlink_to(f'../share/hyprune/machines/{name}.py')
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
