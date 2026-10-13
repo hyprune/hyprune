@@ -3,6 +3,31 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-13: core 233118a (v0.7.1), shell e165fef, sdk 2899916, schema c694b36, docs bc7ffd5, worlds c331205 (IPC 0.25)
+
+Core v0.7.1 (IPC 0.25 companions; the world root honours `XDG_DATA_HOME`) with its
+prebuilt archive for Hyprland 0.56.2 (same ABI hash). `try/manifest.json` names core
+233118a (prebuilt and source archives), shell e165fef, and sdk 2899916 for the CLI that
+try builds. The Nix packages are core 0.7.1 and SDK 0.9.0 (its npmDepsHash follows the
+lock). Schema 0.11.0. World and library records are unchanged (Lumen Reach 0.11.0,
+hyprune-starter 0.2.0); tryVersion stays 0.1.4.
+
+`nix flake check` passed on clean `git archive` snapshots: core CTest 45/45, shell 344
+tests (1 skipped), sdk 186 tests (184 pass, 2 skipped), starter 81 tests (1 skipped).
+The meta tests pass (81). End to end on a headless host, inside a private KWin parent
+with a fresh `mktemp` HOME:
+- `try.sh` took the prebuilt path. It installed core 0.7.1 at 233118a, Lumen Reach
+  0.11.0 and the pinned hyprune-starter 0.2.0 library (14 objects), and wrote content
+  records for both.
+- `hyprune source list` from the try folder lists the Official and Community registry
+  sources.
+- In the nested window the loaded plugin reports `hyprune-core` 0.7.1
+  (`hyprctl plugin list`), active in Lumen Reach, and the four residents walk.
+- Director > Objects lists the starter's objects in the catalog (marked Library).
+  Director > Library shows the two installs and both sources.
+- The session started the source helper with `--token-refresh`, and it stopped with the
+  session.
+
 ## 2026-10-12: sdk 3fe9393 (@hyprune/sdk 0.6.1)
 
 SDK 0.6.1: the client holds the hello from its response frame, so an event that core
