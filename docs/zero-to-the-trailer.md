@@ -9,8 +9,8 @@ with original architecture, baked lighting, and live applications on tool mounts
 
 ![Live terminal at Sun Court](images/sun-court.jpg)
 
-This guide uses Hyprland **0.56.2**, IPC **0.23** (core and shell), and the
-`lumen-reach` kit with the published **Lumen Reach 0.10.3** release (pinned by URL and
+This guide uses Hyprland **0.56.2**, IPC **0.24** (core and shell), and the
+`lumen-reach` kit with the published **Lumen Reach 0.11.0** release (pinned by URL and
 hash in `worlds/releases.json`). These are early preview builds, built from the public
 [hyprune repositories](https://github.com/hyprune). The
 [Minimal kit](https://github.com/hyprune/hyprune#install) can be installed without a world download;
@@ -43,9 +43,9 @@ Offline, an archive you already downloaded can be supplied with its independentl
 verified checksum. This doesn't relax hash checking:
 
 ```sh
-sha256sum /path/to/com.hyprune.lumen-reach-0.10.3.tar.zst
+sha256sum /path/to/com.hyprune.lumen-reach-0.11.0.tar.zst
 ./install.sh --kit lumen-reach --source-root /path/to/hyprune \
-  --world-package lumen-reach=/path/to/com.hyprune.lumen-reach-0.10.3.tar.zst \
+  --world-package lumen-reach=/path/to/com.hyprune.lumen-reach-0.11.0.tar.zst \
   --world-sha256 lumen-reach=REPLACE_WITH_VERIFIED_64_HEX_SHA256
 ```
 
