@@ -3,6 +3,21 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-14: core 036d18c (v0.8.2)
+
+Core v0.8.2 (no wire change: the offload power floor under 20 W GPUs, characters upload
+over several ticks, indexed collision queries, spec-gloss character colours, X11 menu
+owners) with its prebuilt archive for Hyprland 0.56.2 (sha256 `0320c311...26da5aa4d`,
+checked against the release's `.sha256`; `abi.json` is byte-for-byte the v0.8.1 one).
+`try/manifest.json` names core 036d18c (prebuilt and source archives); the Nix core
+package is 0.8.2. Shell, SDK, schema, worlds and docs pins are unchanged; try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots (core CTest 49/49). The meta
+tests pass (81). End to end on a headless host, inside a private KWin parent with a fresh
+`mktemp` HOME, `try.sh` took the prebuilt path in 17 s; in the nested window the plugin
+reports `hyprune-core` 0.8.2, the player walked 8 m in Lumen Reach 0.11.2, run exited 0,
+and after uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-14: Lumen Reach 0.11.2 (worlds 7668f58), docs 3ff6c50
 
 Lumen Reach 0.11.2 (the valley terrain carries the sky panorama: no horizon seam; rock
