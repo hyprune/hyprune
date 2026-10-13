@@ -3,6 +3,28 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-13: core 970f029 (v0.7.2), shell 61e9df6, docs 9d34605; try 0.1.5
+
+Core v0.7.2 (no wire change) with its prebuilt archive for Hyprland 0.56.2 (same ABI
+hash). The archive carries `bin/hyprune-demo-source`, the demo source a newly placed machine
+starts with; the Nix core package and `install.py` now install it too. `try/manifest.json`
+names core 970f029 (prebuilt and source archives) and shell 61e9df6. Try is 0.1.5 because
+`install.py`, which try fetches, changed. sdk 2899916 (0.9.0), schema c694b36 (0.11.0),
+worlds c331205 and the world and library records are unchanged.
+
+`nix flake check` passed on clean `git archive` snapshots: core CTest 48/48, shell 352
+tests (2 skipped), starter 81 tests (1 skipped); the SDK derivation is unchanged. The
+meta tests pass (81). End to end on a headless host, inside a private KWin parent with a
+fresh `mktemp` HOME:
+- `try.sh` (0.1.5) took the prebuilt path. It installed core 0.7.2 at 970f029, Lumen
+  Reach 0.11.0 and hyprune-starter 0.2.0 (14 objects).
+- `hyprune-demo-source` from the try folder's core prints a value.
+- `hyprune source list` lists the Official and Community registry sources.
+- In the nested window the plugin reports `hyprune-core` 0.7.2, and the four residents
+  walk.
+- Director > Objects lists the starter's library objects.
+- The source helper runs with `--token-refresh`.
+
 ## 2026-10-13: core 233118a (v0.7.1), shell e165fef, sdk 2899916, schema c694b36, docs bc7ffd5, worlds c331205 (IPC 0.25)
 
 Core v0.7.1 (IPC 0.25 companions; the world root honours `XDG_DATA_HOME`) with its
