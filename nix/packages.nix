@@ -9,7 +9,7 @@ let
   shellTestPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing p.numpy p.pillow ]);
   core = hyprland.stdenv.mkDerivation {
     pname = "hyprune-core";
-    version = "0.7.1";
+    version = "0.7.2";
     src = inputs.core;
     nativeBuildInputs = (with pkgs; [ cmake ninja pkg-config wayland-scanner ]) ++ [ testPython ];
     # meshoptimizer, basisu/zstd (KTX2) and FidelityFX FSR 1 are vendored in
