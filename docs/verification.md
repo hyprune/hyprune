@@ -3,6 +3,21 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-13: Lumen Reach 0.11.1; worlds 6bb6420, docs 26591a5
+
+`worlds/releases.json` pins Lumen Reach 0.11.1 (world format 0.9; fixes from live
+testing: flush surfaces no longer depth-fight, no drain pipe stubs on the rooftop, unlit
+valley terrain, residents stop in front of the screens), sha256 `940c630b...8284d`,
+downloaded from the release and checked against it. `flake.lock` and
+`component-pins.json` name worlds 6bb6420 and docs 26591a5; core, shell, sdk and schema
+are unchanged, so try stays 0.1.5 (`try.sh` and `install.py` did not change).
+
+`nix flake check` passed on clean `git archive` snapshots (the release-world check builds
+`world-lumen-reach-0.11.1` from the pinned URL and hash). The meta tests pass (81). On a
+headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh --dry-run`
+planned core 0.7.2 (prebuilt), Lumen Reach 0.11.1 and hyprune-starter 0.2.0 and wrote
+nothing.
+
 ## 2026-10-13: core 970f029 (v0.7.2), shell 61e9df6, docs 9d34605; try 0.1.5
 
 Core v0.7.2 (no wire change) with its prebuilt archive for Hyprland 0.56.2 (same ABI
