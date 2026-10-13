@@ -3,6 +3,18 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-14: Lumen Reach 0.11.2 (worlds 7668f58), docs 3ff6c50
+
+Lumen Reach 0.11.2 (the valley terrain carries the sky panorama: no horizon seam; rock
+cliffs under the plinths): `worlds/releases.json` pins the published archive (sha256
+`e8aaba3f...51dcf2b9b` checked after download, 53,905,509 bytes, Nix hash
+`sha256-6Kq6P6lW...`). Core, shell, SDK and schema are unchanged; try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots. The meta tests pass (81). End to
+end on a headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh`
+installed Lumen Reach 0.11.2 from its release in 16 s, the player walked 8 m, run exited 0,
+and after uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-13: core d1abbcb (v0.8.1), docs a19fa80
 
 Core v0.8.1 (no wire change: offload draws assets added mid-session, the waypoint route
