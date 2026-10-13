@@ -3,6 +3,24 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-13: core d1abbcb (v0.8.1), docs a19fa80
+
+Core v0.8.1 (no wire change: offload draws assets added mid-session, the waypoint route
+line on the ground and round obstructions, waypoints cleared on arrival, 4K marker labels,
+display names for characters, recall spreads windows, recordings with every tool) with its
+prebuilt archive for Hyprland 0.56.2 (sha256 `0215a3f8...e2cf4811`, checked against the
+release's `.sha256`; `abi.json` is byte-for-byte the v0.8.0 one). `try/manifest.json`
+names core d1abbcb (prebuilt and source archives); the Nix core package is 0.8.1; docs
+a19fa80 adds the RFC-0004 and RFC-0012 amendments. shell, sdk, schema, worlds and the
+world and library records are unchanged; `try.sh`, `check.sh` and `install.py` did not
+change, so try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots (core CTest 49/49, starter 81
+tests). The meta tests pass (81). End to end on a headless host, inside a private KWin
+parent with a fresh `mktemp` HOME, `try.sh` took the prebuilt path in 17 s; in the nested
+window the plugin reports `hyprune-core` 0.8.1, the player walked 8 m, run exited 0, and
+after uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-13: core d3780e0 (v0.8.0), shell bc5d217, sdk 8d394be (0.10.0), schema 86fa42d (0.12.0), docs 7eeabec (IPC 0.26)
 
 Core v0.8.0 (IPC 0.26: the debug tool on the wire, the companion's pace, whole pocket lists)
