@@ -205,7 +205,9 @@ Every install ships it with core: `libexec/hyprune/source-helper`, the gauge
 script `share/hyprune/machines/system-gauges.py` (CPU, RAM, GPU, VRAM) and the
 command `hyprune-system-gauges` that runs it, under core's prefix (the Nix `core`
 package, `~/.local/share/hyprune/install/current` for the Arch script, `core/` in a
-try folder).
+try folder). A newly placed machine starts with a demo source (`hyprune-demo-source`,
+made-up values for its inputs) that the shell writes into `sources.json`; replace it
+with your own command as below, or remove it.
 
 1. Place a gauge: Director → Objects → Catalog, add a gauge (Machines), place it
    with tool 5.

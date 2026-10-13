@@ -49,11 +49,15 @@ let
       cp hypruned hyprune-renderer hyprune-world-check hyprune-object-check $out/bin/
       cp ../config/input.default.json $out/share/hyprune/input.default.json
       # Machines: the data.publish source helper (hyprune-session starts it for
-      # sources.json from <prefix>/libexec, beside lib/) and the system gauge script.
+      # sources.json from <prefix>/libexec, beside lib/), the system gauge script and the
+      # demo source a newly placed machine starts with.
       install -Dm755 ../dev/machines/source-helper.py $out/libexec/hyprune/source-helper
       install -Dm755 ../dev/machines/scripts/system-gauges.py $out/share/hyprune/machines/system-gauges.py
       ln -s ../share/hyprune/machines/system-gauges.py $out/bin/hyprune-system-gauges
-      for script in $out/libexec/hyprune/source-helper $out/share/hyprune/machines/system-gauges.py; do
+      install -Dm755 ../dev/machines/scripts/demo-source.py $out/share/hyprune/machines/demo-source.py
+      ln -s ../share/hyprune/machines/demo-source.py $out/bin/hyprune-demo-source
+      for script in $out/libexec/hyprune/source-helper $out/share/hyprune/machines/system-gauges.py \
+                    $out/share/hyprune/machines/demo-source.py; do
         substituteInPlace $script --replace-fail '#!/usr/bin/env python3' '#!${pkgs.python3.interpreter}'
       done
       mkdir -p $out/share/licenses/hyprune-core
@@ -63,9 +67,10 @@ let
     doInstallCheck = true;
     installCheckPhase = ''
       runHook preInstallCheck
-      # Both run from the installed paths alone (standard-library Python, no checkout).
+      # They run from the installed paths alone (standard-library Python, no checkout).
       $out/libexec/hyprune/source-helper --help > /dev/null
       $out/bin/hyprune-system-gauges ram | ${pkgs.python3.interpreter} -c 'import json, sys; assert json.load(sys.stdin)["label"] == "RAM"'
+      $out/bin/hyprune-demo-source v=number:0:100 | ${pkgs.python3.interpreter} -c 'import json, sys; assert 0 <= json.load(sys.stdin)["v"] <= 100'
       runHook postInstallCheck
     '';
     passthru = { inherit hyprland; };
