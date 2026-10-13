@@ -11,6 +11,29 @@ package is version 0.6.1; its npmDepsHash follows the lock (the lock's own versi
 changed it). `nix flake check` passed on clean `git archive` snapshots of the pinned
 revisions.
 
+## 2026-10-13: core f486fbb (v0.6.0), shell bc3d3cb, sdk 501eabd, schema 1741b94, docs 93b3fd3, worlds f9302c0 (IPC 0.24)
+
+Core v0.6.0 (IPC 0.24: data sources, gauges, machines) with its prebuilt archive for
+Hyprland 0.56.2 (same ABI hash). The archive carries the source helper. `try/manifest.json`
+names core f486fbb (prebuilt and source archives) and shell bc3d3cb. The Nix packages
+are core 0.6.0 and SDK 0.7.0 (its npmDepsHash follows the lock). Schema 0.9.0. Records:
+Lumen Reach 0.11.0 (world format 0.9) in `worlds/releases.json`, hyprune-starter 0.2.0 in
+`libraries/releases.json`; both archives were downloaded and their sha256 and Nix hashes
+checked. Try 0.1.3 also fetches `runtime/session-daemon`, so a try session renews the
+source helper's grant like an installed one.
+
+`nix flake check` passed on clean `git archive` snapshots: core CTest 44/44, shell 311
+tests (1 skipped), sdk 139 tests (137 pass, 2 skipped), starter 54 tests (1 skipped).
+The meta tests pass (54). End to end on a headless host, inside a private KWin parent
+with a fresh `mktemp` HOME:
+- `try.sh` took the prebuilt path and installed core 0.6.0 at f486fbb and Lumen Reach
+  0.11.0.
+- In the nested window the loaded plugin reports `hyprune-core` 0.6.0
+  (`hyprctl plugin list`), active in Lumen Reach.
+- The four residents walk (NPC agents in the plugin diagnostics).
+- The session started the source helper from the try folder with `--token-refresh`; it
+  connected to core as `com.hyprune.sources` and stopped with the session.
+
 ## 2026-10-12: core 09abc14 (v0.5.0), shell c85606d, sdk 274e6d0, schema 2878a5e, docs 578dc32 (IPC 0.23)
 
 Core v0.5.0 (the NPC stage, IPC 0.23; no new launch grant) with its prebuilt archive for
