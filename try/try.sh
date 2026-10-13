@@ -77,11 +77,13 @@ main() {
     mkdir -p "$dir/meta/try" "$dir/meta/worlds"
     printf '%s\n' "$MANIFEST_TEXT" >"$dir/meta/try/manifest.json"
     printf '%s\n' "$releases" >"$dir/meta/worlds/releases.json"
-    for f in try/check.sh try/run.sh try/prepare.py runtime/setup.py runtime/session.py runtime/install.py \
-        runtime/icons.py "kits/$world/kit.toml"; do
+    for f in try/check.sh try/run.sh try/prepare.py runtime/setup.py runtime/session.py runtime/session-daemon \
+        runtime/install.py runtime/icons.py "kits/$world/kit.toml"; do
         mkdir -p "$(dirname "$dir/meta/$f")"
         fetch "$base/$f" "$dir/meta/$f"
     done
+    # core spawns it as the session's daemon: it renews the source helper's grant.
+    chmod 755 "$dir/meta/runtime/session-daemon"
 
     get_core "$dir"
     get_shell "$dir"

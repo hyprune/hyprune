@@ -51,6 +51,15 @@ class ManifestTests(unittest.TestCase):
         self.assertTrue(record['published'])
         self.assertTrue((ROOT / 'kits' / MANIFEST['world'] / 'kit.toml').is_file())
 
+    def test_try_fetches_the_session_runtime(self):
+        # session.py renews the source helper's grant only through runtime/session-daemon.
+        script = (ROOT / 'try/try.sh').read_text()
+        listed = re.search(r'for f in (.*?); do', script, re.S)[1].split()
+        for f in ['runtime/session.py', 'runtime/session-daemon', 'runtime/setup.py', 'runtime/install.py']:
+            self.assertIn(f, listed)
+            self.assertTrue((ROOT / f).is_file(), f)
+        self.assertEqual(session.DAEMON_WRAPPER.name, 'session-daemon')
+        self.assertIn('chmod 755 "$dir/meta/runtime/session-daemon"', script)
 
 class ScriptTests(unittest.TestCase):
     def test_check_json_report(self):
