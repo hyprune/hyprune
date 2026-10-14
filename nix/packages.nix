@@ -9,7 +9,7 @@ let
   shellTestPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing p.numpy p.pillow ]);
   core = hyprland.stdenv.mkDerivation {
     pname = "hyprune-core";
-    version = "0.8.2";
+    version = "0.8.3";
     src = inputs.core;
     nativeBuildInputs = (with pkgs; [ cmake ninja pkg-config wayland-scanner ]) ++ [ testPython ];
     # meshoptimizer, basisu/zstd (KTX2) and FidelityFX FSR 1 are vendored in
@@ -32,7 +32,8 @@ let
       python3 tests/fixtures/climbing.py
     '';
     cmakeFlags = [ "-DBUILD_TESTING=ON" ];
-    nativeCheckInputs = [ pkgs.mesa pkgs.zstd ]; # zstd: the catalog test packs .tar.zst fixtures
+    # zstd: the catalog test packs .tar.zst fixtures; curl: the remote runner test fetches file:// inputs
+    nativeCheckInputs = [ pkgs.mesa pkgs.zstd pkgs.curl ];
     doCheck = true;
     checkPhase = ''
       runHook preCheck

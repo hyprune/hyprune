@@ -3,6 +3,24 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-14: core 8a415a3 (v0.8.3), shell 8e987c9
+
+Core v0.8.3 (no wire change: `shell.release` while the session is locked and a holder's
+repeated `shell.claim` as a renewal, so the HUD comes back after a lock; the standing spot in
+front of the player is searched past window placement zones and keep-clear volumes, and a
+refusal names its rule) with its prebuilt archive for Hyprland 0.56.2 (sha256
+`145ca2d8...d0268cd9`, checked against the release's `.sha256`; `abi.json` is byte-for-byte
+the v0.8.2 one). Shell 8e987c9 retries a release refused while locked and claims again on the
+next world entry. `try/manifest.json` names core 8a415a3 (prebuilt and source archives) and
+shell 8e987c9; the Nix core package is 0.8.3 and its checks get curl (the remote runner test
+fetches `file://` inputs). SDK, schema, worlds and docs pins are unchanged; try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots (core CTest 49/49, shell 367). The
+meta tests pass (81). End to end on a headless host, inside a private KWin parent with a fresh
+`mktemp` HOME, `try.sh` took the prebuilt path in 23 s; in the nested window the plugin
+reports `hyprune-core` 0.8.3, the player walked 8 m in Lumen Reach 0.11.2, run exited 0, and
+after uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-14: core 036d18c (v0.8.2)
 
 Core v0.8.2 (no wire change: the offload power floor under 20 W GPUs, characters upload
