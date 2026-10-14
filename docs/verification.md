@@ -55,6 +55,19 @@ tests pass (81). End to end on a headless host, inside a private KWin parent wit
 reports `hyprune-core` 0.8.2, the player walked 8 m in Lumen Reach 0.11.2, run exited 0,
 and after uninstall HOME and the runtime directory were unchanged.
 
+## 2026-10-14: Lumen Reach 0.11.3 (worlds 54303d9), docs 2f9533f
+
+Lumen Reach 0.11.3 (no falling out of the world: the stair-foot slot is floored, floor edges
+over the void are guarded, a fall-through sweep is a release gate): `worlds/releases.json`
+pins the published archive (sha256 `30ee724f...d1895f8579a6` checked after download,
+53,768,087 bytes, Nix hash `sha256-MO5yT1tg...`). Core, shell, SDK and schema are unchanged;
+try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots. The meta tests pass (81). End to
+end on a headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh`
+installed Lumen Reach 0.11.3 from its release, the player walked 8 m, run exited 0, and after
+uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-14: Lumen Reach 0.11.2 (worlds 7668f58), docs 3ff6c50
 
 Lumen Reach 0.11.2 (the valley terrain carries the sky panorama: no horizon seam; rock

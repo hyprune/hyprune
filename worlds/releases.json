@@ -1,11 +1,11 @@
 {
   "lumen-reach": {
     "id": "com.hyprune.lumen-reach",
-    "version": "0.11.2",
+    "version": "0.11.3",
     "formatVersion": "0.9",
-    "url": "https://github.com/hyprune/worlds/releases/download/lumen-reach-v0.11.2/com.hyprune.lumen-reach-0.11.2.tar.zst",
-    "sha256": "e8aaba3fa9564e8b36e033f96df393538f70b275a4bbecc6e680fbc51dcf2b9b",
-    "nixHash": "sha256-6Kq6P6lWTos24DP5bfOTU49wsnWku+zG5oD7xR3PK5s=",
+    "url": "https://github.com/hyprune/worlds/releases/download/lumen-reach-v0.11.3/com.hyprune.lumen-reach-0.11.3.tar.zst",
+    "sha256": "30ee724f5b6029b022039f9fe512c0f4f19ca83f432eafee22c6d1895f8579a6",
+    "nixHash": "sha256-MO5yT1tgKbAiA5+f5RLA9PGcqD9DLq/uIsbRiV+FeaY=",
     "published": true
   },
   "switchyard": {
