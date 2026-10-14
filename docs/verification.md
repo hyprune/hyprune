@@ -3,6 +3,25 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-14: core 6c3aab3 (v0.8.4), shell 62b0d22, docs e7be96f
+
+Core v0.8.4 (no wire change: a path drawn with tool 3 is taken where a character needs a route
+and becomes one when walkable for it; the companion's follow slot falls back to walking-rule
+spots where every free spot near the player lies in a keep-clear volume, and it never stands
+idle far away; with offload, characters are in the compositor's depth pass, so blended world
+haze behind them stays behind them) with its prebuilt archive for Hyprland 0.56.2 (sha256
+`bb67d2e1...7fbea21`, checked against the release's `.sha256`; `abi.json` is byte-for-byte the
+v0.8.3 one). Shell 62b0d22 lists the user's drawn paths in the rebind and spawn route column.
+Docs e7be96f carries the RFC-0010/0011 amendments. `try/manifest.json` names core 6c3aab3
+(prebuilt and source archives) and shell 62b0d22; the Nix core package is 0.8.4. SDK, schema
+and worlds pins are unchanged; try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots (core CTest 49/49, shell 368). The
+meta tests pass (81). End to end on a headless host, inside a private KWin
+parent with a fresh `mktemp` HOME, `try.sh` took the prebuilt path in 20 s; in the nested
+window the plugin reports `hyprune-core` 0.8.4, the player walked 8 m in Lumen Reach 0.11.2,
+run exited 0, and after uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-14: core 8a415a3 (v0.8.3), shell 8e987c9
 
 Core v0.8.3 (no wire change: `shell.release` while the session is locked and a holder's

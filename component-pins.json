@@ -1,9 +1,9 @@
 {
   "core": {
-    "rev": "8a415a34cb34305f6b341cd005c99ea0fd235704"
+    "rev": "6c3aab3b0a50d709289e16a34c317c13883ea3ff"
   },
   "shell": {
-    "rev": "8e987c937634030eda19a9afacf677b1ff2e9e90"
+    "rev": "62b0d22539b49e494a6e2b8266fad4cef510b8f8"
   },
   "sdk": {
     "rev": "8d394be2073e9cd505f36bd2964b597bd321fa29"
@@ -15,6 +15,6 @@
     "rev": "86fa42d434886b3ea152de26e2d27d196892da70"
   },
   "docs": {
-    "rev": "3ff6c5017bd7191019ee04085626b7ca2e8c8836"
+    "rev": "e7be96f834a0452153abd403a2bc99cb0908d13e"
   }
 }
