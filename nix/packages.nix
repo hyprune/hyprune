@@ -9,7 +9,7 @@ let
   shellTestPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing p.numpy p.pillow ]);
   core = hyprland.stdenv.mkDerivation {
     pname = "hyprune-core";
-    version = "0.8.4";
+    version = "0.9.0";
     src = inputs.core;
     nativeBuildInputs = (with pkgs; [ cmake ninja pkg-config wayland-scanner ]) ++ [ testPython ];
     # meshoptimizer, basisu/zstd (KTX2) and FidelityFX FSR 1 are vendored in
@@ -97,16 +97,20 @@ let
     meta.license = lib.licenses.mit;
   };
   sdk = pkgs.buildNpmPackage {
-    pname = "hyprune-sdk"; version = "0.10.0"; src = inputs.sdk;
-    npmDepsHash = "sha256-VycsSdukRxrqxzmASMtIbzLuhgHYw3T/eX/KJQAofUg=";
+    pname = "hyprune-sdk"; version = "0.11.0"; src = inputs.sdk;
+    npmDepsHash = "sha256-A0019wiXRMm5isJW5BHqFsRfVvxN/LBgSnClUvCQ5CI=";
     nodejs = pkgs.nodejs_24;
-    npmFlags = [ "--ignore-scripts" ];
+    # sharp (via ndarray-pixels) stays without its optional native binaries: the SDK resizes,
+    # encodes and decodes images in JavaScript and never loads sharp's native code.
+    npmFlags = [ "--ignore-scripts" "--omit=optional" ];
     npmBuildScript = "build";
     doCheck = true;
     checkPhase = ''npm test'';
-    nativeBuildInputs = [ pkgs.makeWrapper pkgs.gnutar pkgs.zstd ];
+    # git: `hyprune builder` keeps each world folder in a git repository (its tests too).
+    nativeBuildInputs = [ pkgs.makeWrapper pkgs.gnutar pkgs.zstd pkgs.git ];
     postInstall = ''
-      wrapProgram $out/bin/hyprune --prefix PATH : ${lib.makeBinPath [ pkgs.gnutar pkgs.zstd ]}
+      wrapProgram $out/bin/hyprune --prefix PATH : ${lib.makeBinPath [ pkgs.gnutar pkgs.zstd pkgs.git ]}
+      if find $out -name '*.node' | grep -q .; then echo "native Node addons in the SDK package" >&2; exit 1; fi
     '';
     meta = { license = lib.licenses.mit; mainProgram = "hyprune"; };
   };

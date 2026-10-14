@@ -55,6 +55,24 @@ tests pass (81). End to end on a headless host, inside a private KWin parent wit
 reports `hyprune-core` 0.8.2, the player walked 8 m in Lumen Reach 0.11.2, run exited 0,
 and after uninstall HOME and the runtime directory were unchanged.
 
+## 2026-10-15: core aaab300 (v0.9.0), shell eecbd5d, SDK 688a47b (0.11.0), schema 5c95119 (0.13.0), docs ce8c484
+
+The builder track released: IPC 0.27, world format 0.11 and object format 0.11 (workspace
+screens, imports, world folders, panorama skies) are final in @hyprune/schema 0.13.0 and SDK
+0.11.0; core v0.9.0 also restores user character placements across a restart and adds
+`hyprune-walk-check`. Core prebuilt for Hyprland 0.56.2 (sha256 `2f307c51...0de4da`, abi.json
+identical to v0.8.4). `try/manifest.json` names core aaab300, shell eecbd5d and SDK 688a47b;
+Nix core 0.9.0 and SDK 0.11.0 (new npmDepsHash). The Nix SDK now has git (`hyprune builder`
+keeps world folders in git; its tests need it) and installs without sharp's optional native
+binaries (`--omit=optional`; the build fails if a native Node addon appears; the SDK handles
+images in JavaScript). try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots. The meta tests pass (81). End to
+end on a headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh`
+installed the prebuilt core (the plugin reports `hyprune-core` 0.9.0) and Lumen Reach 0.11.3,
+the player walked 8 m, run exited 0, and after uninstall HOME and the runtime directory were
+unchanged.
+
 ## 2026-10-14: Lumen Reach 0.11.3 (worlds 54303d9), docs 2f9533f
 
 Lumen Reach 0.11.3 (no falling out of the world: the stair-foot slot is floored, floor edges
