@@ -3,7 +3,7 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
-## 2026-10-15: core 4019418 (v0.9.1), shell 2cf87d8, docs cdd5826
+## 2026-10-15: core 4019418 (v0.9.1), shell 2cf87d8, docs 126d360
 
 Core v0.9.1 (no wire change: data sources phase 2 in the bundled source helper, secrets by name
 from the environment, a 0600 secrets file or the keyring, HTTP methods and bodies,
@@ -11,7 +11,7 @@ JSONPath-like selectors and the gauge map, the control channel's raw test answer
 op) with its prebuilt archive for Hyprland 0.56.2 (sha256 `16b8ebbd...be802a78f`, checked
 against the release's `.sha256`; `abi.json` is byte-for-byte the v0.9.0 one; the archive's
 `libexec/hyprune/source-helper` is the new helper). Shell 2cf87d8 adds Director → Objects →
-Data sources. Docs cdd5826 carries the RFC-0013 amendment and "Feed a gauge from a web API".
+Data sources. Docs 126d360 carries the RFC-0013 amendment, "Feed a gauge from a web API" and try-it 0.9.1.
 `try/manifest.json` names core 4019418 (prebuilt and source archives) and shell 2cf87d8; the
 Nix core package is 0.9.1. SDK, schema and worlds pins are unchanged; try stays 0.1.5.
 

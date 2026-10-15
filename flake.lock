@@ -52,11 +52,11 @@
     "docs": {
       "flake": false,
       "locked": {
-        "lastModified": 1792027685,
-        "narHash": "sha256-Ah/yL1Rex4Zq/ekzqkPjXf7NF7tGx4J0KvYGJwfpHOM=",
+        "lastModified": 1792028822,
+        "narHash": "sha256-uxa6KkWuKD7zV47DlxepCoVSXAsHPxVGRwhF+pLlBE0=",
         "owner": "hyprune",
         "repo": "docs",
-        "rev": "cdd58261f37710c358d03d00727dcb21779aac74",
+        "rev": "126d3606a58cbff92a03f818828617ff6093e0b2",
         "type": "github"
       },
       "original": {
