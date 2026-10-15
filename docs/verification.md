@@ -3,6 +3,23 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-15: core 4019418 (v0.9.1), shell 2cf87d8, docs cdd5826
+
+Core v0.9.1 (no wire change: data sources phase 2 in the bundled source helper, secrets by name
+from the environment, a 0600 secrets file or the keyring, HTTP methods and bodies,
+JSONPath-like selectors and the gauge map, the control channel's raw test answer and secrets
+op) with its prebuilt archive for Hyprland 0.56.2 (sha256 `16b8ebbd...be802a78f`, checked
+against the release's `.sha256`; `abi.json` is byte-for-byte the v0.9.0 one; the archive's
+`libexec/hyprune/source-helper` is the new helper). Shell 2cf87d8 adds Director → Objects →
+Data sources. Docs cdd5826 carries the RFC-0013 amendment and "Feed a gauge from a web API".
+`try/manifest.json` names core 4019418 (prebuilt and source archives) and shell 2cf87d8; the
+Nix core package is 0.9.1. SDK, schema and worlds pins are unchanged; try stays 0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots. The meta tests pass (81). End to
+end on a headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh`
+took the prebuilt path; the player walked 8 m in Lumen Reach 0.11.3, run exited 0, and after
+uninstall HOME and the runtime directory were unchanged.
+
 ## 2026-10-14: core 6c3aab3 (v0.8.4), shell 62b0d22, docs e7be96f
 
 Core v0.8.4 (no wire change: a path drawn with tool 3 is taken where a character needs a route
