@@ -19,7 +19,9 @@ and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
 that use them. The official object library, the **Hyprune starter kit**
 (`com.hyprune.starter` 0.3.0), is pinned in
 [libraries/releases.json](libraries/releases.json) and preinstalled by every
-install path below. Dedicated DRM/hardware-cursor acceptance still needs a supervised
+install path below. Optional official libraries, such as the **Hyprune companions**
+(`com.hyprune.companions` 0.1.0), are pinned in [libraries/optional.json](libraries/optional.json):
+listed in the registry, never preinstalled. Dedicated DRM/hardware-cursor acceptance still needs a supervised
 hardware checklist; container tests cannot verify it.
 
 | Kit | First experience | Graphics | Distribution |

@@ -1,0 +1,11 @@
+{
+  "com.hyprune.companions@0.1.0": {
+    "id": "com.hyprune.companions",
+    "version": "0.1.0",
+    "formatVersion": "0.10",
+    "url": "https://github.com/hyprune/worlds/releases/download/hyprune-companions-v0.1.0/com.hyprune.companions-0.1.0.tar.zst",
+    "sha256": "0bf95a02831eaac82f1834648073ca7d54ae2d9902d46da4b65da034957fe4ce",
+    "nixHash": "sha256-C/laAoMeqsgvGDRkgHPKfVSuLZkC1G2ktl2gNJV/5M4=",
+    "published": true
+  }
+}
