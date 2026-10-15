@@ -3,6 +3,25 @@
 Validation date: 2026-10-08. Local only; no push, deployment, live plugin load,
 owner-session compositor command, or component checkout edit.
 
+## 2026-10-15: core 2b419a1 (v0.10.0), shell 41de720, SDK 65dae98 (0.12.0), schema 34849da (0.14.0), worlds 8dc3852, docs de54f71
+
+The shared clip library release round: IPC 0.28 and motion packs (motion.json 0.1) are final in
+@hyprune/schema 0.14.0 and SDK 0.12.0 (npmDepsHash updated); core v0.10.0 with its prebuilt
+archive for Hyprland 0.56.2 (sha256 `64d739f6...e43df`, checked against the release's
+`.sha256`; `abi.json` matches v0.9.1; the plugin reports 0.10.0). `libraries/releases.json`
+pins the starter kit 0.3.0 (workspace screens, the starter motions, residents 1.1.0; it
+replaces 0.2.0, sha256 `832cac3a...57ec3`); `worlds/releases.json` pins Lumen Reach 0.12.0
+(residents sit with the starter motions; sha256 `bf0f16e5...e2547`). The optional companions
+library 0.1.0 is not pinned here: every pinned library is preinstalled. `try/manifest.json`
+names core 2b419a1 (prebuilt and source archives), shell 41de720 and SDK 65dae98; try stays
+0.1.5.
+
+`nix flake check` passed on clean `git archive` snapshots. The meta tests pass (81). End to
+end on a headless host, inside a private KWin parent with a fresh `mktemp` HOME, `try.sh`
+took the prebuilt path (plugin 0.10.0), installed Lumen Reach 0.12.0 and the starter kit
+0.3.0; the player walked 8 m, run exited 0, and after uninstall HOME and the runtime directory
+were unchanged.
+
 ## 2026-10-15: core 4019418 (v0.9.1), shell 2cf87d8, docs 126d360
 
 Core v0.9.1 (no wire change: data sources phase 2 in the bundled source helper, secrets by name
