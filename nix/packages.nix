@@ -9,7 +9,7 @@ let
   shellTestPython = pkgs.python3.withPackages (p: [ p.jsonschema p.referencing p.numpy p.pillow ]);
   core = hyprland.stdenv.mkDerivation {
     pname = "hyprune-core";
-    version = "0.9.1";
+    version = "0.10.0";
     src = inputs.core;
     nativeBuildInputs = (with pkgs; [ cmake ninja pkg-config wayland-scanner ]) ++ [ testPython ];
     # meshoptimizer, basisu/zstd (KTX2) and FidelityFX FSR 1 are vendored in
@@ -97,8 +97,8 @@ let
     meta.license = lib.licenses.mit;
   };
   sdk = pkgs.buildNpmPackage {
-    pname = "hyprune-sdk"; version = "0.11.0"; src = inputs.sdk;
-    npmDepsHash = "sha256-A0019wiXRMm5isJW5BHqFsRfVvxN/LBgSnClUvCQ5CI=";
+    pname = "hyprune-sdk"; version = "0.12.0"; src = inputs.sdk;
+    npmDepsHash = "sha256-lZ76wg/oCtFkF4KsY7ij6IBdNdISZIWXz5Y66Vr4qfM=";
     nodejs = pkgs.nodejs_24;
     # sharp (via ndarray-pixels) stays without its optional native binaries: the SDK resizes,
     # encodes and decodes images in JavaScript and never loads sharp's native code.

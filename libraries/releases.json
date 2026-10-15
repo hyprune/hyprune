@@ -1,11 +1,11 @@
 {
-  "com.hyprune.starter@0.2.0": {
+  "com.hyprune.starter@0.3.0": {
     "id": "com.hyprune.starter",
-    "version": "0.2.0",
-    "formatVersion": "0.10",
-    "url": "https://github.com/hyprune/worlds/releases/download/hyprune-starter-v0.2.0/com.hyprune.starter-0.2.0.tar.zst",
-    "sha256": "c5708f151ea25d4233c31f729cc18be45284e388abed5bbe9c134d29467b4963",
-    "nixHash": "sha256-xXCPFR6iXUIzwx9ynMGL5FKE44ir7Vu+nBNNKUZ7SWM=",
+    "version": "0.3.0",
+    "formatVersion": "0.11",
+    "url": "https://github.com/hyprune/worlds/releases/download/hyprune-starter-v0.3.0/com.hyprune.starter-0.3.0.tar.zst",
+    "sha256": "832cac3adeddc1873486f56b0ed25cf560c5d69d64453aac9c58f68305157ec3",
+    "nixHash": "sha256-gyysOt7dwYc0hvVrDtJc9WDF1p1kRTqsnFj2gwUVfsM=",
     "published": true
   }
 }

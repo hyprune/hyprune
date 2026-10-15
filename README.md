@@ -11,13 +11,13 @@ worlds and starter kits. Start in our vision, then change every part of it.
 ![A live terminal on a Sun Court desk in Lumen Reach](docs/images/sun-court.jpg)
 
 Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
-**0.27**; the shell negotiates its newest supported protocol with core. Every
+**0.28**; the shell negotiates its newest supported protocol with core. Every
 component is public on [GitHub](https://github.com/hyprune) under MIT (worlds:
 CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.11.3**
 (world format 0.9) and **Switchyard 0.1.2** are published releases, pinned by URL
 and hash in [worlds/releases.json](worlds/releases.json) and fetched by the kits
 that use them. The official object library, the **Hyprune starter kit**
-(`com.hyprune.starter` 0.1.0), is pinned in
+(`com.hyprune.starter` 0.3.0), is pinned in
 [libraries/releases.json](libraries/releases.json) and preinstalled by every
 install path below. Dedicated DRM/hardware-cursor acceptance still needs a supervised
 hardware checklist; container tests cannot verify it.
