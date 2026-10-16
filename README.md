@@ -11,7 +11,7 @@ worlds and starter kits. Start in our vision, then change every part of it.
 ![A live terminal on a Sun Court desk in Lumen Reach](docs/images/sun-court.jpg)
 
 Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
-**0.28**; the shell negotiates its newest supported protocol with core. Every
+**0.33**; the shell negotiates its newest supported protocol with core. Every
 component is public on [GitHub](https://github.com/hyprune) under MIT (worlds:
 CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.12.0**
 (world format 0.9) and **Switchyard 0.1.2** are published releases, pinned by URL
