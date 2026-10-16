@@ -1,0 +1,30 @@
+{
+  "lockVersion": "0.1",
+  "generated": "2026-10-16T08:00:00Z",
+  "packages": [
+    {
+      "id": "com.hyprune.starter",
+      "type": "library",
+      "version": "0.3.0",
+      "tag": "hyprune-starter-v0.3.0",
+      "url": "https://github.com/hyprune/worlds/releases/download/hyprune-starter-v0.3.0/com.hyprune.starter-0.3.0.tar.zst",
+      "sha256": "832cac3adeddc1873486f56b0ed25cf560c5d69d64453aac9c58f68305157ec3",
+      "nixHash": "sha256-gyysOt7dwYc0hvVrDtJc9WDF1p1kRTqsnFj2gwUVfsM=",
+      "sourceId": "official",
+      "sourceLabel": "Official",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "id": "com.hyprune.lumen-reach",
+      "type": "world",
+      "version": "0.12.0",
+      "tag": "lumen-reach-v0.12.0",
+      "url": "https://github.com/hyprune/worlds/releases/download/lumen-reach-v0.12.0/com.hyprune.lumen-reach-0.12.0.tar.zst",
+      "sha256": "bf0f16e55190adfcc8ebc5605a224f879ee689901b638c7842deea26136e2547",
+      "nixHash": "sha256-vw8W5VGQrfzI68VgWiJPh57miZAbY4x4Qt7qJhNuJUc=",
+      "sourceId": "official",
+      "sourceLabel": "Official",
+      "license": "CC-BY-4.0"
+    }
+  ]
+}

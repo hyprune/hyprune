@@ -5,6 +5,7 @@ Shared by the installer, try.sh and the Nix library derivations; standard librar
 
     content.py install-library --archive A --sha256 H --id ID --version V --url URL --root DIR --state DIR
     content.py unpack-library --archive A --id ID --version V --out DIR
+    content.py unpack-world --archive A --id ID --version V --out DIR
     content.py record-world --state DIR --id ID --version V --url URL --sha256 H --manifest world.json
 """
 import argparse
@@ -153,6 +154,22 @@ def unpack_library(archive, library_id, version, out):
     try:
         extract_package(archive, stage, library_id, 'library', version)
         os.rename(stage / library_id, out / f'{library_id}@{version}')
+    finally:
+        shutil.rmtree(stage, ignore_errors=True)
+
+
+def unpack_world(archive, world_id, version, out):
+    """For build systems (Nix content locks): extract into out/<id>/ with the same rules; the
+    manifest must name the locked version too."""
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix='.stage-', dir=out))
+    try:
+        extract_package(archive, stage, world_id, 'world')
+        found = json.loads((stage / world_id / 'world.json').read_text()).get('version')
+        if found != version:
+            raise ValueError(f'{world_id}: world.json names version {found}, the lock {version}')
+        os.rename(stage / world_id, out / world_id)
     finally:
         shutil.rmtree(stage, ignore_errors=True)
 
@@ -366,8 +383,9 @@ def main(argv=None):
     sub = parser.add_subparsers(dest='command', required=True)
     lib = sub.add_parser('install-library', help='verify, extract and record one pinned library')
     unpack = sub.add_parser('unpack-library', help='extract a library into OUT/<id>@<version>/ (no records)')
+    unpack_w = sub.add_parser('unpack-world', help='extract a world into OUT/<id>/ (no records; the version must match)')
     world = sub.add_parser('record-world', help='record an installed official world in content.json')
-    for p in [lib, unpack]:
+    for p in [lib, unpack, unpack_w]:
         p.add_argument('--archive', required=True, type=Path)
         p.add_argument('--id', required=True)
         p.add_argument('--version', required=True)
@@ -376,6 +394,7 @@ def main(argv=None):
     lib.add_argument('--root', required=True, type=Path)
     lib.add_argument('--state', required=True, type=Path)
     unpack.add_argument('--out', required=True, type=Path)
+    unpack_w.add_argument('--out', required=True, type=Path)
     for name in ['--state', '--id', '--version', '--url', '--sha256', '--manifest']:
         world.add_argument(name, required=True)
     args = parser.parse_args(argv)
@@ -385,6 +404,8 @@ def main(argv=None):
         print(f'{result} {args.id}@{args.version}')
     elif args.command == 'unpack-library':
         unpack_library(args.archive, args.id, args.version, args.out)
+    elif args.command == 'unpack-world':
+        unpack_world(args.archive, args.id, args.version, args.out)
     else:
         release = dict(id=args.id, version=args.version, url=args.url, sha256=args.sha256)
         record_official_world(args.state, release, json.loads(Path(args.manifest).read_text()))

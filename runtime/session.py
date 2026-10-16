@@ -21,7 +21,7 @@ from setup import init
 TARGET = '0.56.2'
 CAPABILITIES = ['state.read', 'world.control', 'surface.control', 'movement.control',
                 'shell.control', 'runtime.control', 'input.control', 'quest.control',
-                'objects.control']
+                'objects.control', 'content.control']
 SOURCES_CLIENT = 'com.hyprune.sources'
 TOKEN_VARIABLES = ['HYPRUNE_TOKEN_FD', 'HYPRUNE_TOKEN_REFRESH', 'HYPRUNE_SOURCES_TOKEN', 'HYPRUNE_MACHINES_TOKEN']
 

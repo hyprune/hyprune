@@ -337,3 +337,34 @@ class OfficialLibraries(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class LockedWorldUnpack(unittest.TestCase):
+    """content.py unpack-world (Nix content locks): the world root, the locked version, the rules."""
+
+    def setUp(self):
+        self.temp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.temp)
+        self.archive = self.temp / 'world.tar.zst'
+
+    def world(self, version='1.2.0', extra=()):
+        manifest = json.dumps({'formatVersion': '0.9', 'id': 'org.example.harbour', 'version': version, 'name': 'Harbour'}).encode()
+        return [member('org.example.harbour/', kind=tarfile.DIRTYPE, mode=0o755), member('org.example.harbour/world.json', manifest), *extra]
+
+    def test_unpacks_into_the_world_root(self):
+        pack(self.archive, self.world())
+        content.main(['unpack-world', '--archive', str(self.archive), '--id', 'org.example.harbour', '--version', '1.2.0', '--out', str(self.temp / 'out')])
+        self.assertTrue((self.temp / 'out/org.example.harbour/world.json').is_file())
+        self.assertEqual([p.name for p in (self.temp / 'out').iterdir()], ['org.example.harbour'])
+
+    def test_the_locked_version_must_match(self):
+        pack(self.archive, self.world('1.1.0'))
+        with self.assertRaisesRegex(ValueError, 'version 1.1.0, the lock 1.2.0'):
+            content.unpack_world(self.archive, 'org.example.harbour', '1.2.0', self.temp / 'out')
+        self.assertEqual(list((self.temp / 'out').iterdir()), [])
+
+    def test_unsafe_members_are_refused(self):
+        pack(self.archive, self.world(extra=[member('org.example.harbour/../escape', b'x')]))
+        with self.assertRaises(ValueError):
+            content.unpack_world(self.archive, 'org.example.harbour', '1.2.0', self.temp / 'out')
+        self.assertFalse((self.temp / 'escape').exists())

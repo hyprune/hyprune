@@ -103,12 +103,20 @@ programs.hyprune = {
   settings.graphics = { quality = "intel"; reduced_motion = true; };
   libraries.pinned = true; # official object libraries, read-only (the default)
   libraries.extra = [];    # more library roots holding <id>@<version>/ directories
+  content.lock = ./hyprune-content.lock.json; # worlds and libraries you installed, pinned
+  content.sources = [];    # custom content sources, read-only
 };
 ```
 
 The pinned libraries are fixed-output downloads unpacked with the installer's
 archive rules; the session's `HYPRUNE_LIBRARY_DIR` lists them, so the Director
 shows them as system-managed (update or remove them in your configuration).
+
+`content.lock` declares content you installed with the Director or the `hyprune` CLI:
+`hyprune content lock --output hyprune-content.lock.json` writes every installed world and
+library at its exact release (archive URL, sha256 and its Nix hash), and the module installs
+each one as a fixed-output download with the same rules, read-only. `content.sources` takes
+custom sources in the shape of `content-sources.json`'s `custom` list.
 
 Rebuild and choose **Hyprune (minimal)** at login, or run `Hyprland` from a TTY.
 The module selects the same pinned compositor used to compile the plugin, plus

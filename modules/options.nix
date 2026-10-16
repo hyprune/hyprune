@@ -33,6 +33,28 @@
         '';
       };
     };
+    content = {
+      lock = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
+        default = null;
+        example = lib.literalExpression "./hyprune-content.lock.json";
+        description = ''
+          A content lock written by `hyprune content lock` (RFC-0015): every world and library
+          in it becomes a fixed-output fetch of its locked archive, unpacked with the
+          installer's rules and installed read-only (system-managed in the Director: no update,
+          rollback or remove there). Update by writing a new lock.
+        '';
+      };
+      sources = lib.mkOption {
+        type = lib.types.listOf lib.types.attrs;
+        default = [];
+        example = [ { id = "franks-stuff"; label = "Frank's stuff"; kind = "index"; url = "https://example.org/hyprune/v0.1/index.json"; enabled = true; } ];
+        description = ''
+          Custom content sources (entries of registry/v0.1/sources.schema.json `custom`),
+          written to a read-only file listed in HYPRUNE_SOURCES_FILES.
+        '';
+      };
+    };
     settings = lib.mkOption {
       type = lib.types.attrs;
       default = {};
