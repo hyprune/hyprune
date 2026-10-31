@@ -273,14 +273,14 @@ def main():
     os_release = Path('/etc/os-release').read_text() if Path('/etc/os-release').exists() else ''
     arch = bool(re.search(r'^ID=(?:"arch"|arch)$', os_release, re.M))
     version = hyprland.binary_version() if shutil.which('Hyprland') else None
-    releases = hyprland.supported()
-    if version and hyprland.unsupported(version, releases):
-        raise RuntimeError(hyprland.unsupported(version, releases))
+    supported = hyprland.supported()
+    if version and hyprland.unsupported(version, supported):
+        raise RuntimeError(hyprland.unsupported(version, supported))
     blockers = []
     if not arch:
         blockers.append('Fedora/Debian builds are not validated; use Nix or port dependencies manually')
     if not version:
-        blockers.append('Install Hyprland ' + ' or '.join(releases) + ' before building')
+        blockers.append('Install Hyprland ' + ' or '.join(supported) + ' before building')
     for world in kit['worlds']:
         if world == 'minimal':
             continue
@@ -290,7 +290,7 @@ def main():
                 blockers.append(f'{world}: local archive needs --world-sha256 {world}=<64 lowercase hex>')
         elif not r['published']:
             blockers.append(f'{world}: TODO owner must publish the GitHub Release URL and SHA256')
-    print(f'Kit: {kit["name"]}; Hyprland: {version or "not installed"} (supported: {", ".join(releases)}); destination: {prefix}')
+    print(f'Kit: {kit["name"]}; Hyprland: {version or "not installed"} (supported: {", ".join(supported)}); destination: {prefix}')
     print('Dependencies: sudo pacman -S --needed ' + ' '.join(DEPENDENCIES))
     print('Build core with matching pkg-config headers (hyprpm manifest proposal: proposals/hyprpm.toml).')
     print('Install shell in a Python venv, Quickshell wrapper, SDK CLI; verify and unpack data-only worlds.')
