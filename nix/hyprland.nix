@@ -1,7 +1,7 @@
 { inputs, pkgs }:
 let
-  # v0.56.2's own nixpkgs lock carries Glaze 8, but its CMake asks for 7...<8.
-  # Pin the exact fallback release, offline; don't let FetchContent use the network.
+  # Hyprland's CMake falls back to Glaze 7.2.0 through FetchContent (v0.56 asked for 7...<8,
+  # its nixpkgs carried 8). Pin that release, offline; don't let FetchContent use the network.
   glaze = (pkgs.glaze.override { enableSSL = false; enableInterop = false; }).overrideAttrs {
     version = "7.2.0";
     src = pkgs.fetchFromGitHub {

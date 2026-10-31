@@ -1,14 +1,15 @@
 # Build and test the front door
 
 This repo packages component source through non-flake source inputs. Component
-repositories require no Nix files. `flake.nix` pins Hyprland to **v0.56.2** and
+repositories require no Nix files. `flake.nix` pins Hyprland to **v0.57.0** and
 follows **that flake's nixpkgs**. Both the plugin and compositor use Hyprland's
 stdenv and dependency graph. Nix modules choose that same compositor and portal;
 an unrelated system Hyprland build is not ABI-compatible just because its
 displayed version matches. Core retains its exact runtime ABI gate.
 
-`nix/hyprland.nix` pins Glaze 7.2.0 because the tag's own nixpkgs lock provides
-Glaze 8 while 0.56.2's CMake accepts only 7. Both plugin and session use that same
+`nix/hyprland.nix` pins Glaze 7.2.0, the release Hyprland's CMake falls back to through
+FetchContent, so the build stays offline (0.56.2's own nixpkgs lock provided Glaze 8 while its
+CMake accepted only 7). Both plugin and session use that same
 corrected derivation; nothing in the Hyprland source/tag or its nixpkgs is changed.
 
 `component-pins.json` records the non-Nix source commits. `flake.lock` locks the

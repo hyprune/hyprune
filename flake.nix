@@ -1,7 +1,7 @@
 {
   description = "Hyprune — an explorable desktop, with a place to start";
   inputs = {
-    hyprland.url = "github:hyprwm/Hyprland/v0.56.2";
+    hyprland.url = "github:hyprwm/Hyprland/v0.57.0";
     nixpkgs.follows = "hyprland/nixpkgs";
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -34,7 +34,7 @@
         default = pkgs.mkShell.override { stdenv = p.core.stdenv; } {
           inputsFrom = [ p.core p.sdk ];
           packages = with pkgs; [ python3 nodejs ninja cmake pkg-config shellcheck git zstd ];
-          shellHook = ''echo "Hyprune: build against Hyprland 0.56.2; never test on your running desktop."'';
+          shellHook = ''echo "Hyprune: build against Hyprland 0.57.0; never test on your running desktop."'';
         };
         worlds = pkgs.mkShell { packages = with pkgs; [ nodejs python3 zstd ]; };
       });

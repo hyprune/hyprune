@@ -10,7 +10,7 @@ with original architecture, baked lighting, and live applications on tool mounts
 ![Live terminal at Sun Court](images/sun-court.jpg)
 
 This guide uses Hyprland **0.56.2**, IPC **0.25** (core and shell), and the
-`lumen-reach` kit with the published **Lumen Reach 0.12.0** release (pinned by URL and
+`lumen-reach` kit with the published **Lumen Reach 0.12.1** release (pinned by URL and
 hash in `worlds/releases.json`). These are early preview builds, built from the public
 [hyprune repositories](https://github.com/hyprune). The
 [Minimal kit](https://github.com/hyprune/hyprune#install) can be installed without a world download;
