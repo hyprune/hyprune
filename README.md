@@ -10,7 +10,9 @@ worlds and starter kits. Start in our vision, then change every part of it.
 
 ![A live terminal on a Sun Court desk in Lumen Reach](docs/images/sun-court.jpg)
 
-Early preview, targeting **Hyprland 0.56.2**. Core, shell and SDK speak IPC
+Early preview for Hyprland: core supports the current release and the one before
+([supported versions](https://hyprune.com/hyprland-versions/)); the pinned core and
+the Nix flake use **Hyprland 0.56.2**. Core, shell and SDK speak IPC
 **0.28**; the shell negotiates its newest supported protocol with core. Every
 component is public on [GitHub](https://github.com/hyprune) under MIT (worlds:
 CC-BY-4.0 content). Minimal is self-contained. **Lumen Reach 0.12.0**
@@ -66,8 +68,9 @@ curl -fsSL https://hyprune.com/try | bash -s -- --dir ~/hyprune-try --dry-run   
 ~/hyprune-try/uninstall    # deletes the folder; nothing else to undo
 ```
 
-The prebuilt core matches Arch Linux's Hyprland 0.56.2. Elsewhere, or with
-another Hyprland build, `nix run github:hyprune/hyprune#try` brings the pinned
+The check picks the core prebuilt for your Hyprland release (one per supported
+release, built against Arch Linux's packages). Elsewhere, or with another Hyprland
+build, `nix run github:hyprune/hyprune#try` brings the pinned
 compositor. Sources: [try/](try/); pinned, hash-checked copies and the full
 walkthrough: [hyprune.com/try-it](https://hyprune.com/try-it/).
 
@@ -131,7 +134,8 @@ Home Manager's `Hyprland` wrapper from a TTY. On NixOS, enable the system's
 and its matching portal for system integration; let Home Manager own this user's
 kit. Use one Hyprune module per user/session, rather than applying both starters.
 
-**Arch script:** with Hyprland 0.56.2 installed:
+**Arch script:** with a supported Hyprland release installed (it builds core
+against that release's headers):
 
 ```sh
 git clone https://github.com/hyprune/hyprune

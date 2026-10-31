@@ -1,6 +1,9 @@
 {
   "core": {
-    "rev": "2b419a16f022993ffec6d5775b738e3f2936de39"
+    "rev": "2b419a16f022993ffec6d5775b738e3f2936de39",
+    "hyprland": [
+      "0.56"
+    ]
   },
   "shell": {
     "rev": "41de7209d596b7d56c3ae52c7aa07936b5b5453b"

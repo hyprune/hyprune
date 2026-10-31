@@ -74,7 +74,7 @@ for r in json.loads(sys.argv[1]).values():
 
     step "Plan"
     echo "  folder  $dir (everything goes here; ./uninstall deletes it)"
-    if [[ $CORE == prebuilt ]]; then echo "  core    prebuilt $(manifest_get coreVersion) for Hyprland $(manifest_get hyprland)"
+    if [[ $CORE == prebuilt ]]; then echo "  core    prebuilt $(manifest_get coreVersion) for Hyprland $HYPR_VERSION"
     else echo "  core    hyprune/core@$(manifest_get coreRev | cut -c1-7), built from source here (5-15 minutes)"; fi
     echo "  shell   hyprune/shell@$(manifest_get shellRev | cut -c1-7) and a private Python venv (hash-pinned packages from PyPI)"
     if node_ok; then echo "  cli     hyprune/sdk@$(manifest_get sdkRev | cut -c1-7): the hyprune command (npm packages pinned by its lockfile)"
@@ -95,8 +95,8 @@ for r in json.loads(sys.argv[1]).values():
     printf '%s\n' "$MANIFEST_TEXT" >"$dir/meta/try/manifest.json"
     printf '%s\n' "$releases" >"$dir/meta/worlds/releases.json"
     if ((libs)); then mkdir -p "$dir/meta/libraries" && printf '%s\n' "$libreleases" >"$dir/meta/libraries/releases.json"; fi
-    for f in try/check.sh try/run.sh try/prepare.py runtime/setup.py runtime/session.py runtime/session-daemon \
-        runtime/install.py runtime/content.py runtime/icons.py "kits/$world/kit.toml"; do
+    for f in try/check.sh try/run.sh try/prepare.py component-pins.json runtime/setup.py runtime/session.py \
+        runtime/session-daemon runtime/hyprland.py runtime/install.py runtime/content.py runtime/icons.py "kits/$world/kit.toml"; do
         mkdir -p "$(dirname "$dir/meta/$f")"
         fetch "$base/$f" "$dir/meta/$f"
     done
@@ -130,8 +130,8 @@ get_core() {
     local dir=$1 url sha
     rm -rf "$dir/core"
     if [[ $CORE == prebuilt ]]; then
-        step "Core: prebuilt for Hyprland $(manifest_get hyprland)"
-        url=$(manifest_get corePrebuiltUrl) sha=$(manifest_get corePrebuiltSha256)
+        step "Core: prebuilt for Hyprland $HYPR_VERSION"
+        url=$(manifest_get "hyprland${HYPR_BUILD}CorePrebuiltUrl") sha=$(manifest_get "hyprland${HYPR_BUILD}CorePrebuiltSha256")
         fetch "$url" "$dir/downloads/core.tar.gz"
         verify "$dir/downloads/core.tar.gz" "$sha"
         tar -C "$dir/downloads" -xzf "$dir/downloads/core.tar.gz"
@@ -143,7 +143,7 @@ get_core() {
         verify "$dir/downloads/core-src.tar.gz" "$sha"
         mkdir -p "$dir/downloads/src" "$dir/downloads/tmp"
         tar -C "$dir/downloads/src" --strip-components=1 -xzf "$dir/downloads/core-src.tar.gz"
-        TMPDIR=$dir/downloads/tmp HYPRLAND_VERSION=$(manifest_get hyprland) HYPRUNE_REV=$(manifest_get coreRev) \
+        TMPDIR=$dir/downloads/tmp HYPRLAND_VERSION=$HYPR_VERSION HYPRUNE_REV=$(manifest_get coreRev) \
             bash "$dir/downloads/src/dev/release/build.sh" "$dir/downloads/out" >"$dir/build.log" 2>&1 ||
             { tail -20 "$dir/build.log"; die "core build failed; full log: $dir/build.log"; }
         tar -C "$dir/downloads" -xzf "$dir"/downloads/out/*.tar.gz

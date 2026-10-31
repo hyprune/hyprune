@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / 'tests'))
 import prepare  # noqa: E402
 import install  # noqa: E402
 import session  # noqa: E402
+import hyprland  # noqa: E402
 
 MANIFEST = json.loads((ROOT / 'try/manifest.json').read_text())
 HEX = re.compile(r'[0-9a-f]{64}')
@@ -31,11 +32,29 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(parsed, {k: str(v) for k, v in MANIFEST.items()})
 
     def test_pins_agree(self):
-        self.assertEqual(MANIFEST['hyprland'], install.TARGET)
-        self.assertEqual(MANIFEST['hyprland'], session.TARGET)
-        self.assertRegex(MANIFEST['hyprlandAbi'], r'^[0-9a-f]{40}_aq_\d+\.\d+_hu_\d+\.\d+_hg_\d+\.\d+_hc_\d+\.\d+_hlg_\d+\.\d+$')
-        self.assertIn(MANIFEST['hyprland'], MANIFEST['hyprlandArchPackage'])
         pins = json.loads((ROOT / 'component-pins.json').read_text())
+        builds = []
+        while f'hyprland{len(builds) + 1}' in MANIFEST:
+            builds.append(len(builds) + 1)
+        versions = [MANIFEST[f'hyprland{i}'] for i in builds]
+        # One core build per Hyprland release the pinned core supports, newest first.
+        self.assertEqual(sorted(hyprland.release(v) for v in versions), sorted(pins['core']['hyprland']))
+        self.assertEqual(versions, sorted(versions, key=lambda v: tuple(map(int, v.split('.'))), reverse=True))
+        self.assertEqual(hyprland.supported(ROOT), pins['core']['hyprland'])
+        for i in builds:
+            version = MANIFEST[f'hyprland{i}']
+            self.assertRegex(MANIFEST[f'hyprland{i}Abi'], r'^[0-9a-f]{40}_aq_\d+\.\d+_hu_\d+\.\d+_hg_\d+\.\d+_hc_\d+\.\d+_hlg_\d+\.\d+$')
+            self.assertTrue(MANIFEST[f'hyprland{i}ArchPackage'].startswith(f'hyprland-{version}-'))
+            if MANIFEST[f'hyprland{i}CorePrebuiltUrl']:
+                self.assertRegex(MANIFEST[f'hyprland{i}CorePrebuiltSha256'], HEX)
+                self.assertTrue(MANIFEST['coreVersion'])
+                self.assertIn(f"-hyprland-{version}-", MANIFEST[f'hyprland{i}CorePrebuiltUrl'])
+        # try 0.1.x (published copies that fetch this manifest from main) reads one build:
+        # the 0.56.2 one, with the keys it knows.
+        legacy = next(i for i in builds if MANIFEST[f'hyprland{i}'] == MANIFEST['hyprland'])
+        for old, new in [('hyprlandAbi', 'Abi'), ('hyprlandArchPackage', 'ArchPackage'),
+                         ('corePrebuiltUrl', 'CorePrebuiltUrl'), ('corePrebuiltSha256', 'CorePrebuiltSha256')]:
+            self.assertEqual(MANIFEST[old], MANIFEST[f'hyprland{legacy}{new}'])
         self.assertEqual(MANIFEST['shellRev'], pins['shell']['rev'])
         self.assertIn(MANIFEST['shellRev'], MANIFEST['shellUrl'])
         self.assertEqual(MANIFEST['coreRev'], pins['core']['rev'])
@@ -46,10 +65,6 @@ class ManifestTests(unittest.TestCase):
         self.assertRegex(MANIFEST['node'], r'^\d+\.\d+$')
         for key in ['shellSha256', 'coreSourceSha256', 'sdkSha256']:
             self.assertRegex(MANIFEST[key], HEX)
-        if MANIFEST['corePrebuiltUrl']:
-            self.assertRegex(MANIFEST['corePrebuiltSha256'], HEX)
-            self.assertTrue(MANIFEST['coreVersion'])
-            self.assertIn(f"-hyprland-{MANIFEST['hyprland']}-", MANIFEST['corePrebuiltUrl'])
 
     def test_world_is_a_published_release_with_a_kit(self):
         releases = json.loads((ROOT / 'worlds/releases.json').read_text())
@@ -61,7 +76,8 @@ class ManifestTests(unittest.TestCase):
         # session.py renews the source helper's grant only through runtime/session-daemon.
         script = (ROOT / 'try/try.sh').read_text()
         listed = re.search(r'for f in (.*?); do', script, re.S)[1].split()
-        for f in ['runtime/session.py', 'runtime/session-daemon', 'runtime/setup.py', 'runtime/install.py']:
+        for f in ['runtime/session.py', 'runtime/session-daemon', 'runtime/setup.py', 'runtime/install.py',
+                  'runtime/hyprland.py', 'component-pins.json']:
             self.assertIn(f, listed)
             self.assertTrue((ROOT / f).is_file(), f)
         self.assertEqual(session.DAEMON_WRAPPER.name, 'session-daemon')
@@ -196,7 +212,7 @@ class ScriptTests(unittest.TestCase):
                 shutil.copytree(ROOT / name, Path(base) / name)
             with (Path(base) / 'try/check.sh').open('a') as check:
                 check.write('collect_checks() { MANIFEST_TEXT=$(curl -fsSL --proto "=https,file" "$MANIFEST"); '
-                            'VERDICT=ready CORE=prebuilt; }\nreport_text() { :; }\n')
+                            'VERDICT=ready CORE=prebuilt HYPR_VERSION=0.56.2 HYPR_BUILD=1; }\nreport_text() { :; }\n')
             env = {**os.environ, 'HOME': home, 'HYPRUNE_BASE': 'file://' + base}
             run = lambda *extra: subprocess.run(['bash', str(ROOT / 'try/try.sh'), '--dry-run', '--dir', home + '/try', *extra],
                                                 capture_output=True, text=True, env=env, timeout=120)

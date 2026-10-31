@@ -135,16 +135,21 @@ check_session() {
     add ok session "Wayland session" "$name (${WAYLAND_DISPLAY})"
 }
 
+# The Hyprland releases the manifest has a core build for: hyprland1 (newest), hyprland2, ...
+hyprland_builds() {
+    local i=1 v
+    while v=$(manifest_get "hyprland$i") && [[ -n $v ]]; do echo "$i $v"; ((i++)); done
+}
+
 check_hyprland() {
-    local want out commit abi='' running=''
-    want=$(manifest_get hyprland)
-    want=${want:-unknown}
-    HYPR_OK=0 ABI=''
+    local out commit abi='' running='' i v builds='' same='' newest='' target fix
+    while read -r i v; do builds+="${builds:+, }$v"; newest=${newest:-$i}; done < <(hyprland_builds)
+    HYPR_OK=0 ABI='' HYPR_BUILD=''
     if ! have Hyprland; then
         if [[ $FAMILY == arch ]]; then
-            add fail hyprland "Hyprland" "not installed (need $want)" "$(install_cmd hyprland)"
+            add fail hyprland "Hyprland" "not installed (need ${builds:-unknown})" "$(install_cmd hyprland)"
         else
-            add fail hyprland "Hyprland" "not installed (need $want); the Nix path brings it" "$(nix_fix)"
+            add fail hyprland "Hyprland" "not installed (need ${builds:-unknown}); the Nix path brings it" "$(nix_fix)"
         fi
         return
     fi
@@ -158,19 +163,28 @@ check_hyprland() {
         running=$(hyprctl version -j 2>/dev/null | sed -n 's/.*"tag": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -1)
     fi
     ABI=$abi
-    if [[ $HYPR_VERSION != "$want" ]]; then
-        local fix
+    # One core build per supported Hyprland release; the plugin ABI needs that exact version.
+    while read -r i v; do
+        [[ $v == "$HYPR_VERSION" ]] && HYPR_BUILD=$i
+        [[ ${v%.*} == "${HYPR_VERSION%.*}" ]] && same=$i
+    done < <(hyprland_builds)
+    if [[ -z $HYPR_BUILD ]]; then
+        target=${same:-$newest}
         if [[ $FAMILY == arch ]]; then
-            fix="sudo pacman -U https://archive.archlinux.org/packages/h/hyprland/$(manifest_get hyprlandArchPackage)-$ARCH.pkg.tar.zst   # or: $NIX_CMD"
+            fix="sudo pacman -U https://archive.archlinux.org/packages/h/hyprland/$(manifest_get "hyprland${target}ArchPackage")-$ARCH.pkg.tar.zst   # or: $NIX_CMD"
         else fix=$(nix_fix); fi
-        add fail hyprland "Hyprland" "${HYPR_VERSION:-unknown version} installed; Hyprune's plugin ABI needs exactly $want" "$fix"
+        if [[ -n $same ]]; then
+            add fail hyprland "Hyprland" "$HYPR_VERSION installed; Hyprune's plugin ABI needs exactly $(manifest_get "hyprland$same")" "$fix"
+        else
+            add fail hyprland "Hyprland" "${HYPR_VERSION:-unknown version} installed, which this Hyprune release does not support (it supports Hyprland $builds)" "$fix"
+        fi
         return
     fi
     HYPR_OK=1
-    if [[ -n $running && $running != "$want" ]]; then
-        add note hyprland "Hyprland" "$want installed, but the running session is $running: log out and back in before --live"
+    if [[ -n $running && $running != "$HYPR_VERSION" ]]; then
+        add note hyprland "Hyprland" "$HYPR_VERSION installed, but the running session is $running: log out and back in before --live"
     else
-        add ok hyprland "Hyprland" "$want${running:+ (running)}"
+        add ok hyprland "Hyprland" "$HYPR_VERSION${running:+ (running)}"
     fi
     if [[ $LIVE == 1 && -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
         add fail live "Live mode" "--live loads into a running Hyprland session; none found" "run from a terminal inside Hyprland, or drop --live for the nested window"
@@ -179,15 +193,15 @@ check_hyprland() {
 
 check_core() {
     local url headers missing=() m tool
-    url=$(manifest_get corePrebuiltUrl)
     CORE=none
     [[ $HYPR_OK == 1 ]] || return
-    if [[ -n $url && $url == *"$ARCH"* && -n $ABI && $ABI == "$(manifest_get hyprlandAbi)" ]]; then
+    url=$(manifest_get "hyprland${HYPR_BUILD}CorePrebuiltUrl")
+    if [[ -n $url && $url == *"$ARCH"* && -n $ABI && $ABI == "$(manifest_get "hyprland${HYPR_BUILD}Abi")" ]]; then
         CORE=prebuilt
         add ok core "Hyprune core" "prebuilt for your Hyprland ABI ($(manifest_get coreVersion))"
         return
     fi
-    if [[ -n $url && -n $ABI && $ABI != "$(manifest_get hyprlandAbi)" ]]; then
+    if [[ -n $url && -n $ABI && $ABI != "$(manifest_get "hyprland${HYPR_BUILD}Abi")" ]]; then
         m="your Hyprland build's ABI differs from the prebuilt core's; "
     else
         m="no prebuilt core is published for this pin yet; "
@@ -198,7 +212,7 @@ check_core() {
     fi
     headers=$(pkg-config --modversion hyprland 2>/dev/null)
     for tool in cmake ninja c++ pkg-config strip; do have "$tool" || missing+=("$tool"); done
-    if [[ $headers != "$(manifest_get hyprland)" ]] || ((${#missing[@]})) ||
+    if [[ $headers != "$HYPR_VERSION" ]] || ((${#missing[@]})) ||
         ! pkg-config --exists pixman-1 libdrm xkbcommon hyprgraphics pangocairo wayland-server lua libxml-2.0 \
             openssl libpng freetype2 fontconfig vulkan gbm 2>/dev/null; then
         add fail core "Hyprune core" "${m}it builds from source into the folder, which needs build tools and Hyprland ${headers:+$headers }headers" \

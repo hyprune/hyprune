@@ -17,8 +17,8 @@ from setup import ROOT, init, load_kit, render
 import content
 from content import extract_package
 import icons
+import hyprland
 
-TARGET = '0.56.2'
 DEPENDENCIES = ['base-devel', 'cmake', 'ninja', 'git', 'pkgconf', 'hyprgraphics',
                 'pixman', 'libdrm', 'libxkbcommon', 'pango', 'wayland', 'wayland-protocols',
                 'mesa', 'libxml2', 'openssl', 'lua', 'libpng', 'freetype2', 'fontconfig',
@@ -272,15 +272,15 @@ def main():
     hashes = dict(x.split('=', 1) for x in args.world_sha256)
     os_release = Path('/etc/os-release').read_text() if Path('/etc/os-release').exists() else ''
     arch = bool(re.search(r'^ID=(?:"arch"|arch)$', os_release, re.M))
-    version = subprocess.check_output(['Hyprland', '--version'], text=True, stderr=subprocess.STDOUT) if shutil.which('Hyprland') else ''
-    match = re.search(r'(?<![\d.])v?' + re.escape(TARGET) + r'(?![\d.])', version)
-    if version and not match:
-        raise RuntimeError(f'Installed Hyprland does not match {TARGET}; refusing an ABI mismatch')
+    version = hyprland.binary_version() if shutil.which('Hyprland') else None
+    releases = hyprland.supported()
+    if version and hyprland.unsupported(version, releases):
+        raise RuntimeError(hyprland.unsupported(version, releases))
     blockers = []
     if not arch:
         blockers.append('Fedora/Debian builds are not validated; use Nix or port dependencies manually')
     if not version:
-        blockers.append(f'Install Hyprland {TARGET} before building')
+        blockers.append('Install Hyprland ' + ' or '.join(releases) + ' before building')
     for world in kit['worlds']:
         if world == 'minimal':
             continue
@@ -290,7 +290,7 @@ def main():
                 blockers.append(f'{world}: local archive needs --world-sha256 {world}=<64 lowercase hex>')
         elif not r['published']:
             blockers.append(f'{world}: TODO owner must publish the GitHub Release URL and SHA256')
-    print(f'Kit: {kit["name"]}; Hyprland: {TARGET}; destination: {prefix}')
+    print(f'Kit: {kit["name"]}; Hyprland: {version or "not installed"} (supported: {", ".join(releases)}); destination: {prefix}')
     print('Dependencies: sudo pacman -S --needed ' + ' '.join(DEPENDENCIES))
     print('Build core with matching pkg-config headers (hyprpm manifest proposal: proposals/hyprpm.toml).')
     print('Install shell in a Python venv, Quickshell wrapper, SDK CLI; verify and unpack data-only worlds.')
@@ -314,12 +314,14 @@ def main():
     if not args.skip_deps:
         run('sudo', 'pacman', '-S', '--needed', *DEPENDENCIES)
     headers = subprocess.check_output(['pkg-config', '--modversion', 'hyprland'], text=True).strip()
-    if headers != TARGET:
-        raise RuntimeError(f'Plugin headers are {headers}; need {TARGET} generated protocol headers')
+    if headers != version:
+        raise RuntimeError(f'Hyprland headers are {headers}, but Hyprland {version} is installed: the plugin must build '
+                           'against the headers of the Hyprland it loads into')
     pins = json.loads((ROOT / 'component-pins.json').read_text())
     recipe = hashlib.sha256((ROOT / 'runtime/install.py').read_bytes()).hexdigest()
     local_hash = local_fingerprint(args.source_root) if args.source_root else None
-    key = hashlib.sha256(json.dumps([pins, recipe, local_hash]).encode()).hexdigest()[:16]
+    # One generation per Hyprland release too: a Hyprland update needs a new core build.
+    key = hashlib.sha256(json.dumps([pins, recipe, local_hash, version]).encode()).hexdigest()[:16]
     generation = prefix / 'versions' / key
     previous = json.loads((prefix / 'receipt.json').read_text()) if (prefix / 'receipt.json').exists() else {}
     prefix.mkdir(parents=True, exist_ok=True)
@@ -341,6 +343,8 @@ def main():
             for name in ['hypruned', 'hyprune-renderer', 'hyprune-world-check']:
                 shutil.copy2(core / 'build' / name, generation / 'bin' / name)
             shutil.copy2(core / 'build/hyprune-core.so', generation / 'lib/hyprune-core.so')
+            (generation / 'share/hyprune').mkdir(parents=True, exist_ok=True)
+            (generation / 'share/hyprune/hyprland-version').write_text(version + '\n')  # what the plugin is built for
             install_machines(core, generation)
             run(sys.executable, '-m', 'venv', generation / 'venv')
             run(generation / 'venv/bin/pip', 'install', '--require-hashes', '-r', generation / 'shell/requirements.txt')

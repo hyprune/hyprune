@@ -33,6 +33,19 @@
    checks.
 8. When the SDK pin moves, update `try/manifest.json`'s `sdkRev`, `sdkUrl` and
    `sdkSha256` too: `try.sh` builds the `hyprune` CLI from that archive.
+9. **Hyprland releases.** Core supports the current Hyprland release and the one
+   before; its release publishes one prebuilt per release (core's
+   `dev/release/hyprland.json`). When the core pin moves, set
+   `component-pins.json`'s `core.hyprland` to the releases that core supports and
+   list one build per release in `try/manifest.json`, newest first: `hyprlandN`,
+   `hyprlandNAbi` (the archive's `.abi.json` `abiHash`), `hyprlandNArchPackage`,
+   `hyprlandNCorePrebuiltUrl` and `hyprlandNCorePrebuiltSha256`. The un-numbered
+   `hyprland`, `hyprlandAbi`, `hyprlandArchPackage`, `corePrebuiltUrl` and
+   `corePrebuiltSha256` keys repeat the 0.56.2 build for try 0.1.x copies that
+   read the manifest from `main`; drop them once hyprune.com serves try 0.2.0 or
+   later and 0.56 leaves the supported set. The Nix flake pins one Hyprland
+   (`flake.nix`); move it to a newer supported release together with a core pin
+   that supports it.
 
 Convert a verified archive hash to Nix SRI without fetching anything:
 

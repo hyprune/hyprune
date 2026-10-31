@@ -17,8 +17,11 @@ import sys
 import tempfile
 import time
 from setup import init
+try:
+    import hyprland
+except ImportError:  # try 0.1.x folders fetch only the runtime files they knew
+    hyprland = None
 
-TARGET = '0.56.2'
 CAPABILITIES = ['state.read', 'world.control', 'surface.control', 'movement.control',
                 'shell.control', 'runtime.control', 'input.control', 'quest.control',
                 'objects.control', 'content.control']
@@ -337,9 +340,11 @@ def run(args, extra):
     normal = config_dir.parent / 'hypr/hyprland.lua'
     # HM's generated config contains the module's include; explicit -c also works.
     config_path = Path(args.config or (normal if args.prefer_user_config and normal.is_file() else config_dir / 'session.lua')).resolve()
-    version = subprocess.check_output([args.hyprland, '--version'], text=True, stderr=subprocess.STDOUT)
-    if not re.search(r'(?<![\d.])v?' + re.escape(TARGET) + r'(?![\d.])', version):
-        raise RuntimeError(f'Hyprune needs Hyprland {TARGET}; installed binary differs')
+    # The plugin loads only into the Hyprland release it was built for: say so before Hyprland does.
+    plugin = hyprland and (os.environ.get('HYPRUNE_PLUGIN') or hyprland.configured_plugin(config_dir))
+    problem = hyprland.mismatch(hyprland.binary_version(args.hyprland), hyprland.core_built_for(plugin)) if plugin else None
+    if problem:
+        raise RuntimeError(problem)
     installed = data_dir / 'worlds'
     directories = json.loads(os.environ.get('HYPRUNE_PACKAGED_WORLD_DIRS', '[]')) + config['world_dirs']
     materialize_worlds(directories, installed)

@@ -49,6 +49,8 @@ let
       cp hyprune-core.so $out/lib/hyprune-core.so
       cp hypruned hyprune-renderer hyprune-world-check hyprune-object-check $out/bin/
       cp ../config/input.default.json $out/share/hyprune/input.default.json
+      # The Hyprland release the plugin is built for (core writes it from 0.11 on).
+      if [ -f hyprland-version ]; then cp hyprland-version $out/share/hyprune/hyprland-version; fi
       # Machines: the data.publish source helper (hyprune-session starts it for
       # sources.json from <prefix>/libexec, beside lib/), the system gauge script and the
       # demo source a newly placed machine starts with.
